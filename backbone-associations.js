@@ -48,8 +48,10 @@
     //++++
   }
 
+  Backbone.Assoc.Model.prototype = new Backbone.Model();
+
   // add Backbone.Model.prototype to Backbone.Assoc.Model
-  _.extend(Backbone.Assoc.Model.prototype, Backbone.Model.prototype, {
+  _.extend(Backbone.Assoc.Model.prototype, {
 
     associations: [],
 

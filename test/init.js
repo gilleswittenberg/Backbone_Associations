@@ -5,6 +5,12 @@ $(document).ready(function() {
     ok(typeof Backbone.Assoc.Model !== 'undefined', 'Backbone.Assoc.Model is defined');
   });
 
+  test("Instanceof", 1, function () {
+    var Model = Backbone.Assoc.Model.extend();
+    var model = new Model();
+    ok(model instanceof Backbone.Model);
+  });
+
   test("Associations undefined if no valid associations", 1, function () {
     var associations = [{foreignName: 'Comments', type: 'hasMany'}];
     var Post = Backbone.Assoc.Model.extend({
@@ -55,5 +61,19 @@ $(document).ready(function() {
     });
     var post = new Post();
     equal(post.associations.length, 5, "Remove invalid associations");
+  });
+
+  test("Defaults", function () {
+    var Model = Backbone.Assoc.Model.extend({
+      defaults: {title: 'Ttle'}
+    });
+    var model = new Model();
+    equal(model.get('title'), 'Ttle');
+  });
+
+  test("Attributes", function () {
+    var Model = Backbone.Assoc.Model.extend();
+    var model = new Model({title: 'Ttle'});
+    equal(model.get('title'), 'Ttle');
   });
 });
