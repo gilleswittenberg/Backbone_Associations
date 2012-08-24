@@ -39,13 +39,15 @@
     this._silent = {};
     this._pending = {};
     this._previousAttributes = _.clone(this.attributes);
-    this.initialize.apply(this, arguments);
     //++++
     if (this.associations) {
       this.initializeAssociations.call(this, this.associationAttributes);
     }
-    this.initialized = true;
     //++++
+    this.initialize.apply(this, arguments);
+    //+++++
+    this.initialized = true;
+    //+++++
   }
 
   Backbone.Assoc.Model.prototype = new Backbone.Model();
