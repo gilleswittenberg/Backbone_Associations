@@ -98,6 +98,19 @@
       this.associations = arr;
     },
 
+    _getAssociation: function (type, name) {
+      if (!name) {
+        name = type;
+        type = 'name';
+      }
+      for (var i = 0, l = this.associations.length; i < l; i++) {
+        if (this.associations[i][type] === name) {
+          return this.associations[i];
+        }
+      }
+      return false;
+    },
+
     // overwrite parse. Make sure you add a call to parseAssociation if you overwrite this again in your model
     parse: function (resp, xhr) {
       if (this.associations) {
@@ -137,6 +150,39 @@
         attributes = typeof associationAttributes[foreignName] !== 'undefined' ? associationAttributes[foreignName] : {};
         this._initAssociation(association, attributes);
       }
+    },
+
+    changeBelongsTo: function (foreignName, attributes) {
+      var model, Model, foreignKey, that;
+      var association = this._getAssociation('foreignName', foreignName);
+
+      if (!association) {
+        return false;
+      }
+
+      if (attributes instanceof Backbone.Model) {
+        model = attributes;
+      } else if (_.isNumber(attributes) && association.collection) {
+        model = association.collection.get(attributes);
+        if (!model) {
+          model = association.collection.create({id: attributes});
+        }
+      } else {
+        Model = association.Model ? association.Model : Backbone.Model.extend();
+        model = new Model(attributes);
+      }
+      foreignKey = this._getForeignKey(association);
+      if (this[foreignName]) {
+        this[foreignName].off('change:' + foreignKey);
+      }
+      this[foreignName] = model;
+      if (model.id) {
+        this.set(this._getKey(association), model.id);
+      } else {
+        that = this;
+        this[foreignName].on('change:' + foreignKey, function () { that._setParentIdToModel(association); });
+      }
+      return this[foreignName];
     },
 
     _initAssociation: function (association, attributes) {
@@ -194,6 +240,10 @@
                 model = association.collection.create(attributes);
               }
             }
+          } else {
+            if (attributes.id) {
+              this.set(key, attributes.id);
+            }
           }
           if (!model) {
             Model = association.Model ? association.Model : Backbone.Model.extend();
@@ -205,7 +255,7 @@
           break;
       }
 
-      if (association.reverse) {
+      if (association.type !== 'belongsTo' && association.reverse) {
         this[foreignName][association.name] = this;
       }
     },

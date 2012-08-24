@@ -1,6 +1,6 @@
 $(document).ready(function() {
 
-  test('Create belongsTo association on creation with id', function () {
+  test("Create belongsTo association on creation with id", function () {
     // constants to test against
     var id = 6;
     var foreignName = 'User';
@@ -15,6 +15,19 @@ $(document).ready(function() {
     ok(typeof post[foreignName].attributes !== 'undefined', 'User is a Model');
     post[foreignName].set(post[foreignName].idAttribute, id);
     equal(post.get('user_id'), id, 'Set parentKey (user_id) on Profile Model');
+  });
+
+  test("Create belongsTo association on creation with parent + id", function () {
+    var User = Backbone.Model.extend();
+    var Profile = Backbone.Assoc.Model.extend({
+      associations: [
+        {name: 'Profile', foreignName: 'User', type: 'belongsTo', Model: User},
+      ],
+      urlRoot: 'profile'
+    });
+    var profile = new Profile({id: 6, User: {id: 3, name: 'BB King'}});
+    equal(profile.User.id, 3);
+    equal(profile.get('user_id'), 3);
   });
 
   test('Create belongsTo association on creation with specified Model', function () {
@@ -92,6 +105,7 @@ $(document).ready(function() {
     ok(typeof post.User !== 'undefined');
   });
 
+  /*
   test("BelongsTo reverse association", function () {
     var User = Backbone.Model.extend({
       urlRoot: 'user'
@@ -105,6 +119,7 @@ $(document).ready(function() {
     var post = new Post({id: 6});
     ok(typeof post.User.Post !== 'undefined');
   });
+  */
 
   test("Include in JSON", function () {
     var User = Backbone.Model.extend();
@@ -149,4 +164,97 @@ $(document).ready(function() {
     server.respond();
     equal(profile['User'].get('name'), 'BB King', "name field for user with id 3 fetched from server");
   });
+
+  test("Change belongsTo non-existing", function () {
+    var Profile = Backbone.Assoc.Model.extend({
+      urlRoot: 'profile'
+    });
+    var profile = new Profile({id: 6, User: {id: 3, name: ''}});
+    ok(profile.changeBelongsTo('NonExist') === false);
+  });
+
+  test("Change belongsTo", function () {
+    var User = Backbone.Model.extend({name: 'User'});
+    var Profile = Backbone.Assoc.Model.extend({
+      associations: [
+        {name: 'Profile', foreignName: 'User', type: 'belongsTo', Model: User},
+      ],
+      urlRoot: 'profile'
+    });
+    var profile = new Profile({id: 6, User: {id: 3, name: ''}});
+    equal(profile.get('user_id'), 3);
+    ok(profile.changeBelongsTo('User', {id: 4, name: 'BB King'}));
+    equal(profile.User.get('name'), 'BB King');
+    equal(profile.User.name, 'User');
+    equal(profile.get('user_id'), 4);
+  });
+
+  test("Change belongsTo with Model", function () {
+    var User = Backbone.Model.extend();
+    var Profile = Backbone.Assoc.Model.extend({
+      associations: [
+        {name: 'Profile', foreignName: 'User', type: 'belongsTo', Model: User},
+      ],
+      urlRoot: 'profile'
+    });
+    var user = new User({id: 4});
+    var profile = new Profile({id: 6, User: {id: 3, name: ''}});
+    ok(profile.changeBelongsTo('User', user));
+    equal(profile.User.id, 4);
+    equal(profile.get('user_id'), 4);
+  });
+
+  test("Change belongsTo with int as id in collection", function () {
+    var User = Backbone.Model.extend();
+    var Users = Backbone.Collection.extend();
+    var users = new Users(new User({id: 4}));
+    var Profile = Backbone.Assoc.Model.extend({
+      associations: [
+        {name: 'Profile', foreignName: 'User', type: 'belongsTo', Model: User, collection: users},
+      ],
+      urlRoot: 'profile'
+    });
+    var profile = new Profile({id: 6, User: {id: 3, name: ''}});
+    ok(profile.changeBelongsTo('User', 4));
+    equal(profile.User.id, 4);
+    equal(profile.get('user_id'), 4);
+  });
+
+  test("Change belongsTo with int as id not in collection", function () {
+    this.stub(jQuery, 'ajax');
+    var User = Backbone.Model.extend();
+    var Users = Backbone.Collection.extend({url: 'users'});
+    var users = new Users();
+    var Profile = Backbone.Assoc.Model.extend({
+      associations: [
+        {name: 'Profile', foreignName: 'User', type: 'belongsTo', Model: User, collection: users},
+      ],
+      urlRoot: 'profile'
+    });
+    var profile = new Profile({id: 6, User: {id: 3, name: ''}});
+    ok(profile.changeBelongsTo('User', 4));
+    equal(users.size(), 1);
+    equal(profile.User.id, 4);
+    equal(profile.get('user_id'), 4);
+  });
+
+   test("Listeners belongsTo", function () {
+    var User = Backbone.Model.extend();
+    var Profile = Backbone.Assoc.Model.extend({
+      associations: [
+        {name: 'Profile', foreignName: 'User', type: 'belongsTo', Model: User, init: false},
+      ],
+      urlRoot: 'profile'
+    });
+    var profile = new Profile({id: 6});
+    var user1 = new User();
+    var user2 = new User();
+    var spy = this.spy(profile, 'set');
+    profile.changeBelongsTo('User', user1);
+    profile.changeBelongsTo('User', user2);
+    user1.set('id', 1);
+    ok(spy.called === false);
+    user2.set('id', 2);
+    ok(spy.called);
+   });
 });
