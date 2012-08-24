@@ -115,7 +115,7 @@
           if (typeof this[foreignName] !== 'undefined') {
             this._setAssociationAttributes(association, attributes[foreignName]);
           } else if (this.initialized !== false) {
-            this._setAssociation(association, attributes[foreignName]);
+            this._initAssociation(association, attributes[foreignName]);
           }
           //?? associationAttributes[associations[i].foreignName] = _.clone(attributes[associations[i].foreignName]);
           this.associationAttributes[foreignName] = attributes[foreignName];
@@ -135,11 +135,11 @@
           continue;
         }
         attributes = typeof associationAttributes[foreignName] !== 'undefined' ? associationAttributes[foreignName] : {};
-        this._setAssociation(association, attributes);
+        this._initAssociation(association, attributes);
       }
     },
 
-    _setAssociation: function (association, attributes) {
+    _initAssociation: function (association, attributes) {
 
       var foreignName = association.foreignName;
       var parentId;
