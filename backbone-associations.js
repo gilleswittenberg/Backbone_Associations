@@ -21,7 +21,7 @@
     if (options && options.parse) attributes = this.parse(attributes);
     //+++
     if (this.associations && (!options || !options.parse)) {
-      this.parseAssociations.call(this, attributes);
+      attributes = this.parseAssociations.call(this, _.clone(attributes));
     }
     //+++
     if (defaults = getValue(this, 'defaults')) {
