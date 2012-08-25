@@ -1,84 +1,86 @@
 $(document).ready(function() {
 
-  test('Create hasMany association on creation with id', 4, function () {
-    // constants to test against
-    var id = 6;
-    var foreignName = 'Comments';
-    // tests
+  test("Create hasMany association on creation with id", 5, function () {
+    var server = this.sandbox.useFakeServer();
+    server.respondWith(
+      'GET',
+      /comments\/6/,
+      [200, {'Content-Type': 'application/json'}, '[{"id":2,"title":"Two"},{"id":3,"title":"Three"},{"id":4,"title":"Four"}]']
+    );
     var Post = Backbone.Assoc.Model.extend({
       associations: [
-        {name: 'Post', foreignName: foreignName, type: 'hasMany', Collection: Backbone.Collection.extend()},
+        {name: 'Post', foreignName: 'Comments', type: 'hasMany', Collection: Backbone.Collection.extend()}
       ],
     });
-    var post = new Post({id: id});
-    ok(typeof post[foreignName] !== 'undefined', 'Create Comments at creation');
-    ok(typeof post[foreignName]._byCid !== 'undefined', 'Comments is collection');
-    ok(post[foreignName].url === foreignName + '/' + id, 'Set parentKey to URL of Comments collection');
-    ok(post[foreignName].size() === 0, 'No models in newly created collection');
+    var post = new Post({id: 6});
+    ok(typeof post.Comments !== 'undefined', "Create Comments at creation");
+    ok(typeof post.Comments._byCid !== 'undefined', "Comments is collection");
+    equal(post.Comments.url, 'comments/6', "Set URL from lowercase name + parentKey");
+    equal(post.Comments.size(), 0, "No models in newly created collection");
+    server.respond();
+    equal(post.Comments.size(), 3, "Models fetched from server");
   });
 
-  test('Create hasMany association on creation for new model', 2, function () {
-    // constants to test against
-    var id = 6;
-    var foreignName = 'Comments';
-    // tests
+  test("Create hasMany association on creation with attributes", 1, function () {
     var Post = Backbone.Assoc.Model.extend({
       associations: [
-        {name: 'Post', foreignName: foreignName, type: 'hasMany', Collection: Backbone.Collection.extend()},
+        {name: 'Post', foreignName: 'Comments', type: 'hasMany', Collection: Backbone.Collection.extend()}
+      ],
+    });
+    var post = new Post({id: 6, Comments: [{id: 1}, {id:2}]});
+    equal(post.Comments.size(), 2, "Collection models set from attributes");
+  });
+
+  test("Set collection url after id change", 2, function () {
+    var Post = Backbone.Assoc.Model.extend({
+      associations: [
+        {name: 'Post', foreignName: 'Comments', type: 'hasMany', Collection: Backbone.Collection.extend()},
       ],
     });
     var post = new Post();
-    ok(typeof post[foreignName].url === 'undefined', 'No url set on collection when parentId is not defined');
-    post.set(post.idAttribute, id);
-    ok(typeof post[foreignName].url !== 'undefined', 'Url set on collection after id is changed');
+    ok(typeof post.Comments.url === 'undefined', "No url set on collection when parentId is not defined");
+    post.set(post.idAttribute, 6);
+    equal(post.Comments.url, 'comments/6' , "Url set on collection after id is changed");
   });
 
-  test('Create hasMany association with specified Collection', 1, function () {
-    // constants to test against
-    var id = 6;
-    var foreignName = 'Comments';
+  test("Create hasMany association with specified Collection", 1, function () {
     var Comments = Backbone.Collection.extend({name: 'CommentsCol'});
-    // tests
     var Post = Backbone.Assoc.Model.extend({
       associations: [
-        {name: 'Post', foreignName: foreignName, type: 'hasMany', Collection: Comments},
+        {name: 'Post', foreignName: 'Comments', type: 'hasMany', Collection: Comments},
       ],
     });
     var post = new Post();
-    equal(post[foreignName].name, 'CommentsCol');
+    equal(post.Comments.name, 'CommentsCol', "Collection is collection specified");
   });
 
   test("Create hasMany Models from attributes object", function () {
-    var id = 6;
-    var foreignName = 'Comments';
     var Post = Backbone.Assoc.Model.extend({
       associations: [
-        {name: 'Post', foreignName: foreignName, type: 'hasMany', Collection: Backbone.Collection.extend()},
+        {name: 'Post', foreignName: 'Comments', type: 'hasMany', Collection: Backbone.Collection.extend()},
       ],
     });
     var attributes = {
-      "id": id,
-      "Comments": [
-        {"id": 1, "post_id": id},
-        {"id": 2, "post_id": id},
-        {"id": 3, "post_id": id}
+      id: 6,
+      Comments: [
+        {id: 1, post_id: 6},
+        {id: 2, post_id: 6},
+        {id: 3, post_id: 6}
       ]
     };
     var post = new Post(attributes);
-    equal(typeof post.get(foreignName), 'undefined', "Comments not set as attribute on post");
-    equal(post[foreignName].size(), 3, "Size of Comments");
+    equal(typeof post.get('Comments'), 'undefined', "Comments not set as attribute on post");
+    equal(post.Comments.size(), 3, "Size of Comments");
   });
 
   test("Init", function () {
     var server = this.sandbox.useFakeServer();
     server.respondWith(
-      "PUT",
+      'PUT',
       /post/,
-      [200, { "Content-Type": "application/json" }, '{"id":6, "Comments":[{"id":1,"title":"One"}]}']
+      [200, {'Content-Type': 'application/json'}, '{"id":6, "Comments":[{"id":1,"title":"One"}]}']
     );
-    var Comments = Backbone.Model.extend({
-      url: 'comments'
-    });
+    var Comments = Backbone.Model.extend();
     var Post = Backbone.Assoc.Model.extend({
       associations: [
         {name: 'Post', foreignName: 'Comments', type: 'hasMany', Collection: Comments, init: false},
@@ -86,25 +88,22 @@ $(document).ready(function() {
       urlRoot: 'post'
     });
     var post = new Post({id: 6});
-    equal(typeof post.Comments, 'undefined');
+    equal(typeof post.Comments, 'undefined', "Comments not defined on post");
     post.save();
     server.respond();
-    ok(typeof post.Comments !== 'undefined');
+    ok(typeof post.Comments !== 'undefined', "Comments defined on post after fetch from server");
   });
 
   test("Hasone reverse association", function () {
     this.stub(jQuery, 'ajax');
-    var Comments = Backbone.Model.extend({
-      url: 'comments'
-    });
+    var Comments = Backbone.Model.extend();
     var Post = Backbone.Assoc.Model.extend({
       associations: [
         {name: 'Post', foreignName: 'Comments', type: 'hasMany', Collection: Comments, reverse: true},
-      ],
-      urlRoot: 'post'
+      ]
     });
     var post = new Post({id: 6});
-    ok(typeof post.Comments.Post !== 'undefined');
+    ok(typeof post.Comments.Post !== 'undefined', "Post defined on Comments");
   });
 
   test("Include in JSON", function () {
@@ -114,11 +113,11 @@ $(document).ready(function() {
       ],
     });
     var attributes = {
-      "id": 3,
-      "Comments": [
-        {"id": 1, "post_id": 3},
-        {"id": 2, "post_id": 3},
-        {"id": 3, "post_id": 3}
+      id: 3,
+      Comments: [
+        {id: 1, post_id: 3},
+        {id: 2, post_id: 3},
+        {id: 3, post_id: 3}
       ]
     };
     var post = new Post(attributes);
@@ -131,9 +130,9 @@ $(document).ready(function() {
   test("Save model when server returns nested data", function () {
     var server = this.sandbox.useFakeServer();
     server.respondWith(
-      "PUT",
+      'PUT',
       /post\/6/,
-      [200, { "Content-Type": "application/json" }, '{"id":6, "Comments":[{"id":1,"title":"One"},{"id":2,"title":"Two"},{"id":3,"title":"Three"}]}']
+      [200, {'Content-Type': 'application/json'}, '{"id":6, "Comments":[{"id":1,"title":"One"},{"id":2,"title":"Two"},{"id":3,"title":"Three"}]}']
     );
     var Comments = Backbone.Collection.extend();
     var Post = Backbone.Assoc.Model.extend({
@@ -151,12 +150,12 @@ $(document).ready(function() {
     equal(post.Comments.size(), 3, "Comments fetched from server");
   });
 
-  test("Collection to trigger add, remove and change ", function () {
+  test("Collection to trigger add, remove and change after save / fetch from server", function () {
     var server = this.sandbox.useFakeServer();
     server.respondWith(
-      "PUT",
+      'PUT',
       /post\/6/,
-      [200, { "Content-Type": "application/json" }, '{"id":6, "Comments":[{"id":2,"title":"Two"},{"id":3,"title":"Three"},{"id":4,"title":"Four"}]}']
+      [200, {'Content-Type': 'application/json'}, '{"id":6, "Comments":[{"id":2,"title":"Two"},{"id":3,"title":"Three"},{"id":4,"title":"Four"}]}']
     );
     var Comments = Backbone.Collection.extend();
     var Post = Backbone.Assoc.Model.extend({

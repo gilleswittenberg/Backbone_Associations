@@ -17,10 +17,12 @@ $(document).ready(function() {
       associations: associations
     });
     var post = new Post({id: 6});
-    ok(post.associations == false);
+    console.log(post.associations);
+    equal(post.associations.length, 0, "post.associations is empty array");
   });
 
   test('Association set on model instance', 1, function () {
+    this.stub(jQuery, 'ajax');
     var associations = [{name: 'Post', foreignName: 'Comments', type: 'hasMany', Collection: Backbone.Collection.extend()}];
     var Post = Backbone.Assoc.Model.extend({
       associations: associations

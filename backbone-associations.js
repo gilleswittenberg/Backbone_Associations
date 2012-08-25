@@ -206,7 +206,10 @@
           this[foreignName] = new association.Collection(attributes);
           parentId = this.id;
           if (parentId) {
-            this[foreignName].url = foreignName + '/' + parentId;
+            this._setIdToCollection(association);
+            if (!attributes) {
+              this[foreignName].fetch();
+            }
           } else {
             this.on('change:' + key, function () { this._setIdToCollection(association); });
           }
@@ -309,7 +312,7 @@
     },
 
     _setIdToCollection: function (association) {
-      this[association.foreignName].url = association.foreignName + '/' + this._getKey(association);
+      this[association.foreignName].url = association.foreignName.toLowerCase() + '/' + this.id;
     },
 
     _setKeyToModel: function (association) {
