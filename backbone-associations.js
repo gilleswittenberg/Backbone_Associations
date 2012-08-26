@@ -92,6 +92,10 @@
         if ((type === 'hasMany' || type === 'hasOne') && !association.name && !association.foreignKey) {
           continue;
         }
+        // set collection from function return
+        if (type === 'belongsTo' && typeof association.collection === 'function') {
+          association.collection = association.collection();
+        }
         arr.push(association);
         if (association.includeInJSON) {
           this.toJSON = this.toAssociativeJSON;

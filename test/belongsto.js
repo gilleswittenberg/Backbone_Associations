@@ -67,22 +67,36 @@ $(document).ready(function() {
 
   test('Create belongsTo association on creation with specified collection', function () {
     this.stub(jQuery, 'ajax');
-    // constants to test against
-    var userId = 6;
-    var foreignName = 'User';
+
     var User = Backbone.Model.extend();
-    var user = new User({id: userId, name: 'userName'});
+    var user = new User({id: 6, name: 'userName'});
     var Users = Backbone.Collection.extend({url: 'users'});
     var users = new Users(user);
-    // tests
     var Post = Backbone.Assoc.Model.extend({
       associations: [
-        {foreignName: foreignName, name: 'Post', type: 'belongsTo', collection: users},
+        {foreignName: 'User', name: 'Post', type: 'belongsTo', collection: users},
       ],
     });
-    var post = new Post({user_id: userId});
-    deepEqual(post[foreignName], user, "user from users collection is set as parent model" );
+    var post = new Post({user_id: 6});
+    deepEqual(post.User, user, "user from users collection is set as parent model" );
   });
+
+  test('Create belongsTo association on creation with collection specified as function', function () {
+    this.stub(jQuery, 'ajax');
+
+    var User = Backbone.Model.extend();
+    var user = new User({id: 6, name: 'userName'});
+    var Users = Backbone.Collection.extend({url: 'users'});
+    var users = new Users(user);
+    var Post = Backbone.Assoc.Model.extend({
+      associations: [
+        {foreignName: 'User', name: 'Post', type: 'belongsTo', collection: function () { return users; }},
+      ],
+    });
+    var post = new Post({user_id: 6});
+    deepEqual(post.User, user, "user from users collection is set as parent model" );
+  });
+
 
   test("Create belongsTo association on creation with specified but not in collection", function () {
     // stub out jQuery ajax
