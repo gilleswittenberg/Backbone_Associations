@@ -1,10 +1,20 @@
 $(document).ready(function() {
 
-  test("Create hasMany association on creation with id", 5, function () {
+  test("Set collection url", 1, function () {
+    var Post = Backbone.Assoc.Model.extend({
+      associations: [
+        {name: 'Post', foreignName: 'Comments', type: 'hasMany', Collection: Backbone.Collection.extend()},
+      ],
+    });
+    var post = new Post();
+    equal(post.Comments.url, 'comments' , "Url set on collection");
+  });
+
+  test("Create hasMany association on creation with id and lazily fetch models", 5, function () {
     var server = this.sandbox.useFakeServer();
     server.respondWith(
       'GET',
-      /comments\/6/,
+      'comments?post_id=6',
       [200, {'Content-Type': 'application/json'}, '[{"id":2,"title":"Two"},{"id":3,"title":"Three"},{"id":4,"title":"Four"}]']
     );
     var Post = Backbone.Assoc.Model.extend({
@@ -15,7 +25,7 @@ $(document).ready(function() {
     var post = new Post({id: 6});
     ok(typeof post.Comments !== 'undefined', "Create Comments at creation");
     ok(typeof post.Comments._byCid !== 'undefined', "Comments is collection");
-    equal(post.Comments.url, 'comments/6', "Set URL from lowercase name + parentKey");
+    equal(post.Comments.url, 'comments', "Set URL from lowercase name");
     equal(post.Comments.size(), 0, "No models in newly created collection");
     server.respond();
     equal(post.Comments.size(), 3, "Models fetched from server");
@@ -31,20 +41,8 @@ $(document).ready(function() {
     equal(post.Comments.size(), 2, "Collection models set from attributes");
   });
 
-  test("Set collection url after id change", 2, function () {
-    var Post = Backbone.Assoc.Model.extend({
-      associations: [
-        {name: 'Post', foreignName: 'Comments', type: 'hasMany', Collection: Backbone.Collection.extend()},
-      ],
-    });
-    var post = new Post();
-    ok(typeof post.Comments.url === 'undefined', "No url set on collection when parentId is not defined");
-    post.set(post.idAttribute, 6);
-    equal(post.Comments.url, 'comments/6' , "Url set on collection after id is changed");
-  });
-
   test("Create hasMany association with specified Collection", 1, function () {
-    var Comments = Backbone.Collection.extend({name: 'CommentsCol'});
+    var Comments = Backbone.Collection.extend({url: 'comments', name: 'CommentsCol'});
     var Post = Backbone.Assoc.Model.extend({
       associations: [
         {name: 'Post', foreignName: 'Comments', type: 'hasMany', Collection: Comments},
@@ -80,7 +78,7 @@ $(document).ready(function() {
       /post/,
       [200, {'Content-Type': 'application/json'}, '{"id":6, "Comments":[{"id":1,"title":"One"}]}']
     );
-    var Comments = Backbone.Model.extend();
+    var Comments = Backbone.Collection.extend();
     var Post = Backbone.Assoc.Model.extend({
       associations: [
         {name: 'Post', foreignName: 'Comments', type: 'hasMany', Collection: Comments, init: false},

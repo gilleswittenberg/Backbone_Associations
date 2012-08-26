@@ -192,7 +192,7 @@
       var foreignName = association.foreignName;
       var parentId;
       var key = this._getKey(association);
-      var foreignKey;
+      var foreignKey = this._getForeignKey(association);
       var protoProps = {};
       var that;
       var Model, Collection;
@@ -201,24 +201,32 @@
       switch (association.type) {
 
         case 'hasMany':
+          parentId = this.id;
           // set empty object to null
           attributes = !_.isEmpty(attributes) ? attributes : null;
           this[foreignName] = new association.Collection(attributes);
-          parentId = this.id;
+          this[foreignName].url = foreignName.toLowerCase();
+          this[foreignName].fetch = function fetch(options) {
+            options = options ? options : {};
+            options.data = options.data ? options.data : {};
+            options.data[foreignKey] = parentId;
+            if (association.Collection.prototype.fetch !== Backbone.Collection.prototype.fetch) {
+              return association.Collection.prototype.fetch.call(this, options);
+            } else {
+              return Backbone.Collection.prototype.fetch.call(this, options);
+            }
+          }
           if (parentId) {
-            this._setIdToCollection(association);
             if (!attributes) {
               this[foreignName].fetch();
             }
-          } else {
-            this.on('change:' + key, function () { this._setIdToCollection(association); });
           }
           break;
 
         case 'hasOne':
           parentId = this.id;
           if (parentId) {
-            attributes[this._getForeignKey(association)] = parentId;
+            attributes[foreignKey] = parentId;
           } else {
             this.on('change:' + key, function () { this._setKeyToModel(association); });
           }
@@ -236,7 +244,6 @@
 
         case 'belongsTo':
           parentId = this.get(key);
-          foreignKey = this._getForeignKey(association);
           if (parentId) {
             attributes[foreignKey] = parentId;
             if (association.collection) {
@@ -312,10 +319,6 @@
         }
       }
       return attributes;
-    },
-
-    _setIdToCollection: function (association) {
-      this[association.foreignName].url = association.foreignName.toLowerCase() + '/' + this.id;
     },
 
     _setKeyToModel: function (association) {
