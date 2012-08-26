@@ -17,7 +17,6 @@ $(document).ready(function() {
       associations: associations
     });
     var post = new Post({id: 6});
-    console.log(post.associations);
     equal(post.associations.length, 0, "post.associations is empty array");
   });
 

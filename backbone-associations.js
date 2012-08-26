@@ -255,6 +255,9 @@
             model = new Model(attributes);
           }
           this[foreignName] = model;
+          if (!this[foreignName].isNew() && _.keys(attributes).length <= 1) {
+            this[foreignName].fetch();
+          }
           that = this;
           this[foreignName].on('change:' + foreignKey, function () { that._setParentIdToModel(association); });
           break;

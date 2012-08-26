@@ -17,6 +17,24 @@ $(document).ready(function() {
     equal(post.get('user_id'), id, 'Set parentKey (user_id) on Profile Model');
   });
 
+  test("Fetch belongsTo association on creation with only id in attributes", function () {
+    var server = this.sandbox.useFakeServer();
+    server.respondWith(
+      'GET',
+      /users\/3/,
+      [200, {'Content-Type': 'application/json'}, '{"id":3,"name":"BB King"}']
+    );
+    var User = Backbone.Model.extend({urlRoot: 'users'});
+    var Post = Backbone.Assoc.Model.extend({
+      associations: [
+        {name: 'Post', foreignName: 'User', type: 'belongsTo', Model: User},
+      ],
+    });
+    var post = new Post({id: 6, User: {id: 3}});
+    server.respond();
+    equal(post.User.get('name'), 'BB King', 'Attributes fetched from server');
+  });
+
   test("Create belongsTo association on creation with parent + id", function () {
     var User = Backbone.Model.extend();
     var Profile = Backbone.Assoc.Model.extend({
@@ -46,12 +64,13 @@ $(document).ready(function() {
   });
 
   test('Create belongsTo association on creation with specified collection', function () {
+    this.stub(jQuery, 'ajax');
     // constants to test against
     var userId = 6;
     var foreignName = 'User';
     var User = Backbone.Model.extend();
     var user = new User({id: userId, name: 'userName'});
-    var Users = Backbone.Collection.extend();
+    var Users = Backbone.Collection.extend({url: 'users'});
     var users = new Users(user);
     // tests
     var Post = Backbone.Assoc.Model.extend({
@@ -162,7 +181,7 @@ $(document).ready(function() {
     var profile = new Profile({id: 6, User: {id: 3, name: ''}});
     profile.save();
     server.respond();
-    equal(profile['User'].get('name'), 'BB King', "name field for user with id 3 fetched from server");
+    equal(profile.User.get('name'), 'BB King', "name field for user with id 3 fetched from server");
   });
 
   test("Change belongsTo non-existing", function () {
@@ -238,7 +257,7 @@ $(document).ready(function() {
     equal(profile.get('user_id'), 4);
   });
 
-   test("Listeners belongsTo", function () {
+  test("Listeners belongsTo", function () {
     var User = Backbone.Model.extend();
     var Profile = Backbone.Assoc.Model.extend({
       associations: [
@@ -256,5 +275,5 @@ $(document).ready(function() {
     ok(spy.called === false);
     user2.set('id', 2);
     ok(spy.called);
-   });
+  });
 });
