@@ -1,13 +1,14 @@
 $(document).ready(function() {
 
   test("Create belongsTo association on creation with id", function () {
+    this.stub(jQuery, 'ajax');
     // constants to test against
     var id = 6;
     var foreignName = 'User';
     // tests
     var Post = Backbone.Assoc.Model.extend({
       associations: [
-        {foreignName: foreignName, name: 'Post', type: 'belongsTo', Model: Backbone.Model.extend()},
+        {foreignName: foreignName, name: 'Post', type: 'belongsTo', Model: Backbone.Model.extend({url: '/'})},
       ],
     });
     var post = new Post({id: id});
@@ -36,7 +37,7 @@ $(document).ready(function() {
   });
 
   test("Create belongsTo association on creation with parent + id", function () {
-    var User = Backbone.Model.extend();
+    var User = Backbone.Model.extend({url: 'users'});
     var Profile = Backbone.Assoc.Model.extend({
       associations: [
         {name: 'Profile', foreignName: 'User', type: 'belongsTo', Model: User},
@@ -49,10 +50,11 @@ $(document).ready(function() {
   });
 
   test('Create belongsTo association on creation with specified Model', function () {
+    this.stub(jQuery, 'ajax');
     // constants to test against
     var id = 6;
     var foreignName = 'User';
-    var User = Backbone.Model.extend({name: 'UserModel'});
+    var User = Backbone.Model.extend({name: 'UserModel', url: 'users'});
     // tests
     var Post = Backbone.Assoc.Model.extend({
       associations: [
