@@ -216,10 +216,8 @@
               return Backbone.Collection.prototype.fetch.call(this, options);
             }
           }
-          if (parentId) {
-            if (!attributes) {
-              this[foreignName].fetch();
-            }
+          if (!attributes && parentId) {
+            this[foreignName].fetch();
           }
           break;
 
