@@ -158,8 +158,9 @@
         if (typeof associationAttributes[foreignName] === 'undefined' && association.init === false) {
           continue;
         }
-        attributes = typeof associationAttributes[foreignName] !== 'undefined' ? associationAttributes[foreignName] : {};
-        this._initAssociation(association, attributes);
+        //attributes = typeof associationAttributes[foreignName] !== 'undefined' ? associationAttributes[foreignName] : {};
+        //this._initAssociation(association, attributes);
+        this._initAssociation(association, associationAttributes[foreignName]);
       }
     },
 
@@ -211,8 +212,6 @@
 
         case 'hasMany':
           parentId = this.id;
-          // set empty object to null
-          attributes = !_.isEmpty(attributes) ? attributes : null;
           this[foreignName] = new association.Collection(attributes);
           this[foreignName].url = foreignName.toLowerCase();
           this[foreignName].fetch = function fetch(options) {
@@ -225,13 +224,14 @@
               return Backbone.Collection.prototype.fetch.call(this, options);
             }
           }
-          if (!attributes && parentId) {
+          if (_.isUndefined(attributes) && parentId) {
             this[foreignName].fetch();
           }
           break;
 
         case 'hasOne':
           parentId = this.id;
+          attributes = typeof attributes !== 'undefined' ? attributes : {};
           if (parentId) {
             attributes[foreignKey] = parentId;
           } else {
@@ -251,23 +251,22 @@
 
         case 'belongsTo':
           parentId = this.get(key);
-          //if (parentId || attributes[foreignKey] || attributes.cid) {
-            if (parentId) {
-              attributes[foreignKey] = parentId;
-            }
-            if (association.collection) {
-              model = association.collection.get(attributes[foreignKey]);
-              if (!model) {
-                if (attributes.cid) {
-                  model = association.collection.getByCid(attributes.cid);
-                  delete association.cid;
-                }
-              }
-              if (!model) {
-                model = association.collection.create(attributes);
+          attributes = typeof attributes !== 'undefined' ? attributes : {};
+          if (parentId) {
+            attributes[foreignKey] = parentId;
+          }
+          if (association.collection) {
+            model = association.collection.get(attributes[foreignKey]);
+            if (!model) {
+              if (attributes.cid) {
+                model = association.collection.getByCid(attributes.cid);
+                delete association.cid;
               }
             }
-          //}
+            if (!model) {
+              model = association.collection.create(attributes);
+            }
+          }
           if (attributes.id) {
             this.set(key, attributes.id);
           }
