@@ -92,7 +92,7 @@
         if ((type === 'hasMany' || type === 'hasOne') && !association.name && !association.foreignKey) {
           continue;
         }
-        // set collection from function return
+        // set collection from function return value
         if (type === 'belongsTo' && typeof association.collection === 'function') {
           association.collection = association.collection();
         }
@@ -246,8 +246,8 @@
 
         case 'belongsTo':
           parentId = this.get(key);
-          if (parentId || attributes[foreignKey] || attributes.cid) {
-            if (!attributes[foreignKey]) {
+          //if (parentId || attributes[foreignKey] || attributes.cid) {
+            if (parentId) {
               attributes[foreignKey] = parentId;
             }
             if (association.collection) {
@@ -262,7 +262,7 @@
                 model = association.collection.create(attributes);
               }
             }
-          }
+          //}
           if (attributes.id) {
             this.set(key, attributes.id);
           }

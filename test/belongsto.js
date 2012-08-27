@@ -128,6 +128,21 @@ $(document).ready(function() {
     deepEqual(post.User, user, "Newly created user from users collection is set as parent model");
   });
 
+  test("Create belongsTo association on creation with empty attributes object", function () {
+    this.stub(jQuery, 'ajax', function () {});
+
+    var User = Backbone.Model.extend();
+    var Users = Backbone.Collection.extend({url: 'users'});
+    var users = new Users();
+    var Post = Backbone.Assoc.Model.extend({
+      associations: [
+        {foreignName: 'User', name: 'Post', type: 'belongsTo', collection: users}
+      ],
+    });
+    var post = new Post({User: {}});
+    equal(users.size(), 1);
+  });
+
   test("Init", function () {
     var server = this.sandbox.useFakeServer();
     server.respondWith(

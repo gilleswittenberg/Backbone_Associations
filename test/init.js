@@ -49,7 +49,7 @@ $(document).ready(function() {
       // valid belongsTo association
       {name: 'User', foreignName: 'Post', Model: Backbone.Model.extend({urlRoot: '/'}), type: 'belongsTo'},
       // another valid belongsTo association
-      {name: 'User', foreignName: 'Post', collection: new (Backbone.Collection.extend({urlRoot: '/'}))(), type: 'belongsTo'},
+      {name: 'User', foreignName: 'Post', collection: new (Backbone.Collection.extend({url: '/'}))(), type: 'belongsTo'},
       // valid hasMany association
       {name: 'Post', foreignName: 'Comments', Collection: Backbone.Collection.extend(), type: 'hasMany'},
       // valid hasOne association
