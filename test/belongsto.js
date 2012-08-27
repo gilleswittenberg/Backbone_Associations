@@ -119,14 +119,12 @@ $(document).ready(function() {
     var Users = Backbone.Collection.extend({url: 'users'});
     var users = new Users();
     var user = users.create();
-    console.log(user.cid);
     var Post = Backbone.Assoc.Model.extend({
       associations: [
         {foreignName: 'User', name: 'Post', type: 'belongsTo', collection: users}
       ],
     });
     var post = new Post({user_id: 6, User: {cid: user.cid}});
-    console.log(post.User.cid);
     deepEqual(post.User, user, "Newly created user from users collection is set as parent model");
   });
 
@@ -253,8 +251,9 @@ $(document).ready(function() {
   });
 
   test("Change belongsTo with int as id in collection", function () {
+    this.stub(jQuery, 'ajax');
     var User = Backbone.Model.extend();
-    var Users = Backbone.Collection.extend();
+    var Users = Backbone.Collection.extend({url: 'users'});
     var users = new Users(new User({id: 4}));
     var Profile = Backbone.Assoc.Model.extend({
       associations: [
@@ -281,7 +280,7 @@ $(document).ready(function() {
     });
     var profile = new Profile({id: 6, User: {id: 3, name: ''}});
     ok(profile.changeBelongsTo('User', 4));
-    equal(users.size(), 1);
+    equal(users.size(), 2);
     equal(profile.User.id, 4);
     equal(profile.get('user_id'), 4);
   });

@@ -246,8 +246,10 @@
 
         case 'belongsTo':
           parentId = this.get(key);
-          if (parentId) {
-            attributes[foreignKey] = parentId;
+          if (parentId || attributes[foreignKey]) {
+            if (!attributes[foreignKey]) {
+              attributes[foreignKey] = parentId;
+            }
             if (association.collection) {
               model = association.collection.get(attributes[foreignKey]);
               if (!model) {
@@ -260,10 +262,9 @@
                 model = association.collection.create(attributes);
               }
             }
-          } else {
-            if (attributes.id) {
-              this.set(key, attributes.id);
-            }
+          }
+          if (attributes.id) {
+            this.set(key, attributes.id);
           }
           if (!model) {
             Model = association.Model ? association.Model : Backbone.Model.extend();
