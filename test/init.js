@@ -64,6 +64,19 @@ $(document).ready(function() {
     equal(post.associations.length, 5, "Remove invalid associations");
   });
 
+  test("AttributeName", function () {
+    var associations = [
+      {name: 'Post', foreignName: 'Comments', attributeName: 'Comment', Collection: Backbone.Collection.extend(), type: 'hasMany'},
+      {name: 'User', foreignName: 'Posts', Collection: Backbone.Collection.extend(), type: 'hasMany'},
+    ];
+    var Post = Backbone.Assoc.Model.extend({
+      associations: associations
+    });
+    var post = new Post();
+    equal(post.associations[0].attributeName, 'Comment');
+    equal(post.associations[1].attributeName, 'Posts');
+  });
+
   test("Defaults", function () {
     var Model = Backbone.Assoc.Model.extend({
       defaults: {title: 'Ttle'}

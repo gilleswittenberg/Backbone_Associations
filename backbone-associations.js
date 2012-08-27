@@ -92,6 +92,10 @@
         if ((type === 'hasMany' || type === 'hasOne') && !association.name && !association.foreignKey) {
           continue;
         }
+        // set attributesName
+        if (!association.attributeName) {
+          association.attributeName = association.foreignName;
+        }
         // set collection from function return value
         if (type === 'belongsTo' && typeof association.collection === 'function') {
           association.collection = association.collection();
@@ -130,15 +134,16 @@
       for (i = 0, l = this.associations.length; i < l; i++) {
         association = this.associations[i];
         foreignName = association.foreignName;
-        if (typeof attributes[foreignName] !== 'undefined') {
+        attributeName = association.attributeName;
+        if (typeof attributes[attributeName] !== 'undefined') {
           if (typeof this[foreignName] !== 'undefined') {
-            this._setAssociationAttributes(association, attributes[foreignName]);
+            this._setAssociationAttributes(association, attributes[attributeName]);
           } else if (this.initialized !== false) {
-            this._initAssociation(association, attributes[foreignName]);
+            this._initAssociation(association, attributes[attributeName]);
           }
           //?? associationAttributes[associations[i].foreignName] = _.clone(attributes[associations[i].foreignName]);
-          this.associationAttributes[foreignName] = attributes[foreignName];
-          delete attributes[foreignName];
+          this.associationAttributes[foreignName] = attributes[attributeName];
+          delete attributes[attributeName];
         }
       }
       return attributes;
