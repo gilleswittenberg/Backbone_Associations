@@ -124,7 +124,7 @@ $(document).ready(function() {
         {foreignName: 'User', name: 'Post', type: 'belongsTo', collection: users}
       ],
     });
-    var post = new Post({user_id: 6, User: {cid: user.cid}});
+    var post = new Post({User: {cid: user.cid}});
     deepEqual(post.User, user, "Newly created user from users collection is set as parent model");
   });
 

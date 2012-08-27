@@ -246,7 +246,7 @@
 
         case 'belongsTo':
           parentId = this.get(key);
-          if (parentId || attributes[foreignKey]) {
+          if (parentId || attributes[foreignKey] || attributes.cid) {
             if (!attributes[foreignKey]) {
               attributes[foreignKey] = parentId;
             }
