@@ -351,8 +351,9 @@ $(document).ready(function() {
       ],
       urlRoot: 'profile'
     });
-    var profile = new Profile({id: 6, User: {id: 3, name: ''}});
+    var profile = new Profile({id: 6, user_id: 3, User: {id: 3, name: ''}});
     ok(profile.changeBelongsTo('User', null));
+    equal(typeof profile.get('user_id'), 'undefined');
     equal(typeof profile.User, 'undefined');
   });
 

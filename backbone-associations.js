@@ -173,6 +173,7 @@
       }
       // remove association
       if (_.isNull(attributes)) {
+        this.unset(this._getKey(association));
         delete this[foreignName];
         return true;
       }
