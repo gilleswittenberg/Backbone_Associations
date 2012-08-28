@@ -8,8 +8,9 @@ $(document).ready(function() {
     // tests
     var Post = Backbone.Assoc.Model.extend({
       associations: [
-        {foreignName: foreignName, name: 'Post', type: 'belongsTo', Model: Backbone.Model.extend({url: '/'})},
+        {foreignName: foreignName, name: 'Post', type: 'belongsTo', Model: Backbone.Model.extend({urlRoot: 'assoc'})},
       ],
+      urlRoot: 'posts'
     });
     var post = new Post({id: id});
     ok(typeof post[foreignName] !== 'undefined', 'Create User at creation');
@@ -358,6 +359,7 @@ $(document).ready(function() {
   });
 
   test("Listeners belongsTo", function () {
+    this.stub(jQuery, 'ajax');
     var User = Backbone.Model.extend();
     var Profile = Backbone.Assoc.Model.extend({
       associations: [

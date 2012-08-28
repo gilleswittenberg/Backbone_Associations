@@ -241,23 +241,23 @@
           break;
 
         case 'hasOne':
-          parentId = this.id;
-          attributes = typeof attributes !== 'undefined' ? attributes : {};
-          if (parentId) {
-            attributes[foreignKey] = parentId;
-          } else {
-            this.on('change:' + key, function () { this._setKeyToModel(association); });
+          attributes = !_.isUndefined(attributes) ? attributes : {};
+          if (this.id) {
+            //++ check if foreignKey is set and different from this.id
+            attributes[foreignKey] = this.id;
           }
-          Model = association.Model ? association.Model : Backbone.Model.extend();
-          this[foreignName] = new Model(attributes);
+          this[foreignName] = new association.Model(attributes);
           // fetch data from server when only id (and parentId) are set
+          //++ improve check instead of length check
           if (attributes[this[foreignName].idAttribute] && _.keys(attributes).length <= 2) {
             this[foreignName].fetch();
           }
-          // save if new
-          else if (this[foreignName].isNew()) {
+          // save if new and foreignKey is set
+          else if (this[foreignName].isNew() && this[foreignName].get('foreignKey')) {
             this[foreignName].save();
           }
+          // pass on change of id to association model
+          this.on('change:' + key, function () { this._setKeyToModel(association); });
           break;
 
         case 'belongsTo':
@@ -348,11 +348,11 @@
     },
 
     _setKeyToModel: function (association) {
-      this[association.foreignName].set(this._getForeignKey(association), this.id);
+      this[association.foreignName].save(this._getForeignKey(association), this.id);
     },
 
     _setParentIdToModel: function (association) {
-      this.set(this._getKey(association), this[association.foreignName].id);
+      this.save(this._getKey(association), this[association.foreignName].id);
     },
 
     _getKey: function (association) {

@@ -35,29 +35,33 @@ $(document).ready(function() {
   });
 
   test('Create hasOne association with specified Model', function () {
-    // constants to test against
-    var id = 6;
-    var foreignName = 'Profile';
-    var Profile = Backbone.Model.extend({name: 'ProfileModel', urlRoot: 'profile'});
+    var Profile = Backbone.Model.extend({name: 'ProfileModel', urlRoot: 'profiles'});
     var server = this.sandbox.useFakeServer();
     server.respondWith(
       "POST",
-      /profile/,
-      [200, { "Content-Type": "application/json" }, '{"id":3,"user_id":6}']
+      /profiles/,
+      [200, { "Content-Type": "application/json" }, '{"id":3}']
+    );
+    server.respondWith(
+      "POST",
+      /users/,
+      [200, { "Content-Type": "application/json" }, '{"id":6}']
     );
     // tests
     var User = Backbone.Assoc.Model.extend({
       associations: [
-        {name: 'User', foreignName: foreignName, type: 'hasOne', Model: Profile},
+        {name: 'User', foreignName: 'Profile', type: 'hasOne', Model: Profile},
       ],
+      urlRoot: 'users'
     });
     var user = new User();
-    equal(user[foreignName].name, 'ProfileModel');
-    ok(typeof user[foreignName].get('user_id') === 'undefined', "No parentId set on model when parentId is not defined");
+    user.save();
+    equal(user.Profile.name, 'ProfileModel', "Model is Profile");
+    equal(typeof user.Profile.get('user_id'), 'undefined', "No parentId set on model when parentId is not defined");
     server.respond();
-    equal(user[foreignName].id, 3);
-    user.set(user.idAttribute, id);
-    ok(typeof user[foreignName].get('user_id') !== 'undefined', "ParentId set on model after id is changed");
+    equal(user.id, 6, "Id set from server response");
+    equal(user.Profile.get('user_id'), 6, "ParentId set on model after id is changed");
+    equal(user.Profile.id, 3, "Profile id is set from server response");
   });
 
   test("Fetch foreign model from attribute id", function () {
