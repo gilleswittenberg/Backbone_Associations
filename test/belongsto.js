@@ -39,6 +39,7 @@ $(document).ready(function() {
   });
 
   test("Create belongsTo association on creation with parent + id", function () {
+    this.stub(jQuery, 'ajax');
     var User = Backbone.Model.extend({url: 'users'});
     var Profile = Backbone.Assoc.Model.extend({
       associations: [
@@ -237,6 +238,7 @@ $(document).ready(function() {
   });
 
   test("Change belongsTo", function () {
+    this.stub(jQuery, 'ajax');
     var User = Backbone.Model.extend({name: 'User'});
     var Profile = Backbone.Assoc.Model.extend({
       associations: [
@@ -253,6 +255,7 @@ $(document).ready(function() {
   });
 
   test("Change belongsTo with Model", function () {
+    this.stub(jQuery, 'ajax');
     var User = Backbone.Model.extend();
     var Profile = Backbone.Assoc.Model.extend({
       associations: [
@@ -300,6 +303,41 @@ $(document).ready(function() {
     equal(users.size(), 2);
     equal(profile.User.id, 4);
     equal(profile.get('user_id'), 4);
+  });
+
+  test("Change belongsTo with attributes as cid in collection", function () {
+    this.stub(jQuery, 'ajax');
+    var User = Backbone.Model.extend();
+    var Users = Backbone.Collection.extend({url: 'users'});
+    var users = new Users(new User({id: 4}));
+    var Profile = Backbone.Assoc.Model.extend({
+      associations: [
+        {name: 'Profile', foreignName: 'User', type: 'belongsTo', Model: User, collection: users},
+      ],
+      urlRoot: 'profile'
+    });
+    var profile = new Profile({id: 6, User: {id: 3, name: ''}});
+    ok(profile.changeBelongsTo('User', users.at(0).cid));
+    equal(profile.User.id, 4);
+    equal(profile.get('user_id'), 4);
+  });
+
+  test("Change belongsTo with attributes as cid not in collection", function () {
+    this.stub(jQuery, 'ajax');
+    var User = Backbone.Model.extend();
+    var Users = Backbone.Collection.extend({url: 'users'});
+    var users = new Users();
+    var Profile = Backbone.Assoc.Model.extend({
+      associations: [
+        {name: 'Profile', foreignName: 'User', type: 'belongsTo', Model: User, collection: users},
+      ],
+      urlRoot: 'profile'
+    });
+    var profile = new Profile({id: 6, User: {id: 3, name: ''}});
+    ok(profile.changeBelongsTo('User', 'c1234'));
+    equal(users.size(), 2);
+    ok(profile.User.id !== 4);
+    ok(profile.get('user_id') !== 4);
   });
 
   test("Listeners belongsTo", function () {

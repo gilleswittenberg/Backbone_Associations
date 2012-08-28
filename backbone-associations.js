@@ -179,6 +179,11 @@
         if (!model) {
           model = association.collection.create({id: attributes});
         }
+      } else if (_.isString(attributes) && /^c\d+/.test(attributes) && association.collection) {
+        model = association.collection.getByCid(attributes);
+        if (!model) {
+          model = association.collection.create();
+        }
       } else {
         Model = association.Model ? association.Model : Backbone.Model.extend();
         model = new Model(attributes);
