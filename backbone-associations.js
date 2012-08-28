@@ -328,7 +328,9 @@
       for (i = 0, l = this.associations.length; i < l; i++) {
         association = this.associations[i];
         if (association.includeInJSON) {
-          attributes[association.foreignName] = this[association.foreignName].toJSON();
+          if (this[association.foreignName]) {
+            attributes[association.foreignName] = this[association.foreignName].toJSON();
+          }
         }
       }
       return attributes;
