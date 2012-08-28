@@ -260,7 +260,7 @@
             if (!model) {
               if (attributes.cid) {
                 model = association.collection.getByCid(attributes.cid);
-                delete association.cid;
+                delete attributes.cid;
               }
             }
             if (!model) {
