@@ -189,7 +189,7 @@
       }
       this[foreignName] = model;
       if (model.id) {
-        this.set(this._getKey(association), model.id);
+        this.save(this._getKey(association), model.id);
       } else {
         that = this;
         this[foreignName].on('change:' + foreignKey, function () { that._setParentIdToModel(association); });
@@ -265,8 +265,8 @@
               model = association.collection.create(attributes);
             }
           }
-          if (attributes.id) {
-            this.set(key, attributes.id);
+          if (attributes.id && this.get(key) !== attributes.id) {
+            this.save(key, attributes.id);
           }
           if (!model) {
             Model = association.Model ? association.Model : Backbone.Model.extend();

@@ -30,8 +30,10 @@ $(document).ready(function() {
       associations: [
         {name: 'Post', foreignName: 'User', type: 'belongsTo', Model: User},
       ],
+      urlRoot: 'posts'
     });
     var post = new Post({id: 6, User: {id: 3}});
+    equal(post.get('user_id'), 3, 'User id set as key');
     server.respond();
     equal(post.User.get('name'), 'BB King', 'Attributes fetched from server');
   });
