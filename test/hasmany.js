@@ -22,7 +22,6 @@ $(document).ready(function() {
         {name: 'Post', foreignName: 'Comments', type: 'hasMany', Collection: Backbone.Collection.extend()}
       ],
     });
-    console.log('==');
     var post = new Post({id: 6});
     ok(typeof post.Comments !== 'undefined', "Create Comments at creation");
     ok(typeof post.Comments._byCid !== 'undefined', "Comments is collection");
@@ -30,7 +29,6 @@ $(document).ready(function() {
     equal(post.Comments.size(), 0, "No models in newly created collection");
     server.respond();
     equal(post.Comments.size(), 3, "Models fetched from server");
-    console.log('==');
   });
 
   test("Create hasMany association on creation with empty array as attributes", 1, function () {
