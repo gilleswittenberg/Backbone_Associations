@@ -257,11 +257,9 @@
           }
           if (association.collection) {
             model = association.collection.get(attributes[foreignKey]);
-            if (!model) {
-              if (attributes.cid) {
-                model = association.collection.getByCid(attributes.cid);
-                delete attributes.cid;
-              }
+            if (!model && attributes.cid) {
+              model = association.collection.getByCid(attributes.cid);
+              delete attributes.cid;
             }
             if (!model) {
               model = association.collection.create(attributes);
