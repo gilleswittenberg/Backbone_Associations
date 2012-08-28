@@ -171,6 +171,11 @@
       if (!association) {
         return false;
       }
+      // remove association
+      if (_.isNull(attributes)) {
+        delete this[foreignName];
+        return true;
+      }
 
       if (attributes instanceof Backbone.Model) {
         model = attributes;

@@ -340,6 +340,22 @@ $(document).ready(function() {
     ok(profile.get('user_id') !== 4);
   });
 
+  test("Remove belongsTo", function () {
+    this.stub(jQuery, 'ajax');
+    var User = Backbone.Model.extend();
+    var Users = Backbone.Collection.extend({url: 'users'});
+    var users = new Users();
+    var Profile = Backbone.Assoc.Model.extend({
+      associations: [
+        {name: 'Profile', foreignName: 'User', type: 'belongsTo', Model: User, collection: users},
+      ],
+      urlRoot: 'profile'
+    });
+    var profile = new Profile({id: 6, User: {id: 3, name: ''}});
+    ok(profile.changeBelongsTo('User', null));
+    equal(typeof profile.User, 'undefined');
+  });
+
   test("Listeners belongsTo", function () {
     var User = Backbone.Model.extend();
     var Profile = Backbone.Assoc.Model.extend({
