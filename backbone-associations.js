@@ -262,7 +262,7 @@
 
         case 'belongsTo':
           parentId = this.get(key);
-          attributes = typeof attributes !== 'undefined' ? attributes : {};
+          attributes = !_.isUndefined(attributes) ? attributes : {};
           if (parentId) {
             attributes[foreignKey] = parentId;
           }
