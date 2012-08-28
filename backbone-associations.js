@@ -286,7 +286,7 @@
           this[foreignName] = model;
           if (!this[foreignName].isNew() && _.keys(attributes).length <= 1) {
             this[foreignName].fetch();
-          } else if (this[foreignName].isNew() && !association.collection) {
+          } else if (this[foreignName].isNew() && !this.isNew() && !association.collection) {
             this[foreignName].save();
           }
           that = this;
