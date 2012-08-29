@@ -378,4 +378,30 @@ $(document).ready(function() {
     user2.set('id', 2);
     ok(spy.called);
   });
+
+  test("Creation from collection", function () {
+    var server = this.sandbox.useFakeServer();
+    server.respondWith(
+      "POST",
+      /users/,
+      [200, { "Content-Type": "application/json" }, '{"id":1}']
+    );
+    var User = Backbone.Model.extend({
+      urlRoot: 'users'
+    });
+    var Profile = Backbone.Assoc.Model.extend({
+      associations: [
+        {name: 'Profile', foreignName: 'User', type: 'belongsTo', Model: User},
+      ],
+      urlRoot: 'profiles'
+    });
+    var Profiles = Backbone.Collection.extend({
+      model: Profile
+    });
+    var profiles = new Profiles();
+    profiles.create({});
+    server.respond();
+    console.log(server);
+    equal(profiles.at(0).get('user_id'), 1);
+  });
 });

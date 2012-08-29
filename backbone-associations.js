@@ -264,6 +264,7 @@
           keyVal = this.get(key);
           attributes = !_.isUndefined(attributes) ? attributes : {};
           if (keyVal) {
+            //++ check if foreignKey is set and different from keyVal
             attributes[foreignKey] = keyVal;
           }
           if (association.collection) {
@@ -273,20 +274,23 @@
               delete attributes.cid;
             }
             if (!model) {
+              //++ validate attributes
               model = association.collection.create(attributes);
             }
           }
-          if (attributes.id && this.get(key) !== attributes.id) {
-            this.save(key, attributes.id);
+          if (attributes.id && keyVal !== attributes.id) {
+            this.set(key, attributes.id);
           }
+          //++ validate attributes
           if (!model) {
             Model = association.Model ? association.Model : Backbone.Model.extend();
             model = new Model(attributes);
           }
           this[foreignName] = model;
+          //++ improve check instead of length check
           if (!this[foreignName].isNew() && _.keys(attributes).length <= 1) {
             this[foreignName].fetch();
-          } else if (this[foreignName].isNew() && !this.isNew() && !association.collection) {
+          } else if (this[foreignName].isNew() && !association.collection) {
             this[foreignName].save();
           }
           that = this;
@@ -348,11 +352,11 @@
     },
 
     _setKeyToModel: function (association) {
-      this[association.foreignName].save(this._getForeignKey(association), this.id);
+      this[association.foreignName].set(this._getForeignKey(association), this.id);
     },
 
     _setParentIdToModel: function (association) {
-      this.save(this._getKey(association), this[association.foreignName].id);
+      this.set(this._getKey(association), this[association.foreignName].id);
     },
 
     _getKey: function (association) {
