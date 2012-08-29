@@ -211,7 +211,7 @@
     _initAssociation: function (association, attributes) {
 
       var foreignName = association.foreignName;
-      var parentId;
+      var keyVal;
       var key = this._getKey(association);
       var foreignKey = this._getForeignKey(association);
       var protoProps = {};
@@ -222,20 +222,20 @@
       switch (association.type) {
 
         case 'hasMany':
-          parentId = this.id;
+          keyVal = this.id;
           this[foreignName] = new association.Collection(attributes);
           this[foreignName].url = foreignName.toLowerCase();
           this[foreignName].fetch = function fetch(options) {
             options = options ? options : {};
             options.data = options.data ? options.data : {};
-            options.data[foreignKey] = parentId;
+            options.data[foreignKey] = keyVal;
             if (association.Collection.prototype.fetch !== Backbone.Collection.prototype.fetch) {
               return association.Collection.prototype.fetch.call(this, options);
             } else {
               return Backbone.Collection.prototype.fetch.call(this, options);
             }
           }
-          if (_.isUndefined(attributes) && parentId) {
+          if (_.isUndefined(attributes) && keyVal) {
             this[foreignName].fetch();
           }
           break;
@@ -247,7 +247,7 @@
             attributes[foreignKey] = this.id;
           }
           this[foreignName] = new association.Model(attributes);
-          // fetch data from server when only id (and parentId) are set
+          // fetch data from server when only id (and keyVal) are set
           //++ improve check instead of length check
           if (attributes[this[foreignName].idAttribute] && _.keys(attributes).length <= 2) {
             this[foreignName].fetch();
@@ -261,10 +261,10 @@
           break;
 
         case 'belongsTo':
-          parentId = this.get(key);
+          keyVal = this.get(key);
           attributes = !_.isUndefined(attributes) ? attributes : {};
-          if (parentId) {
-            attributes[foreignKey] = parentId;
+          if (keyVal) {
+            attributes[foreignKey] = keyVal;
           }
           if (association.collection) {
             model = association.collection.get(attributes[foreignKey]);
