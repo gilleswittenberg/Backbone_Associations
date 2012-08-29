@@ -228,6 +228,7 @@
           this[foreignName].fetch = function fetch(options) {
             options = options ? options : {};
             options.data = options.data ? options.data : {};
+            //++ return false if no this.id / keyVal
             options.data[foreignKey] = keyVal;
             if (association.Collection.prototype.fetch !== Backbone.Collection.prototype.fetch) {
               return association.Collection.prototype.fetch.call(this, options);
@@ -275,7 +276,8 @@
             }
             if (!model) {
               //++ validate attributes
-              model = association.collection.create(attributes);
+              model = association.collection.create(attributes, {async: false});
+              this.set(key, model.get(foreignKey));
             }
           }
           if (attributes.id && keyVal !== attributes.id) {
@@ -290,8 +292,9 @@
           //++ improve check instead of length check
           if (!this[foreignName].isNew() && _.keys(attributes).length <= 1) {
             this[foreignName].fetch();
+            this.set(key, model.get(foreignKey));
           } else if (this[foreignName].isNew() && !association.collection) {
-            this[foreignName].save();
+            this[foreignName].save(null, null, {async: false});
           }
           that = this;
           this[foreignName].on('change:' + foreignKey, function () { that._setParentIdToModel(association); });
@@ -352,7 +355,7 @@
     },
 
     _setKeyToModel: function (association) {
-      this[association.foreignName].set(this._getForeignKey(association), this.id);
+      this[association.foreignName].save(this._getForeignKey(association), this.id);
     },
 
     _setParentIdToModel: function (association) {
