@@ -266,10 +266,6 @@
           attributes = !_.isUndefined(attributes) ? attributes : {};
           // get key of model
           keyVal = this.get(key);
-          // set key if already in association attributes and not on model
-          if (attributes.id && keyVal !== attributes.id) {
-            this.set(key, attributes.id);
-          }
           // set key on association attributes
           if (keyVal) {
             // check if association foreignKey is already set and different from model key
@@ -280,11 +276,14 @@
           }
           // get or create model from collection
           if (association.collection) {
+            // get by id
             assocModel = association.collection.get(attributes[foreignKey]);
+            // get by cid
             if (!assocModel && attributes.cid) {
               assocModel = association.collection.getByCid(attributes.cid);
               delete attributes.cid;
             }
+            // create
             if (!assocModel) {
               //++ validate attributes
               assocModel = association.collection.create(attributes, {async: false});
@@ -304,6 +303,10 @@
                 return false;
               }
             }
+          }
+          // set key if already in association attributes and not on model
+          if (assocModel.id && keyVal !== assocModel.id) {
+            this.set(key, assocModel.id);
           }
           // set association on model
           this[foreignName] = assocModel;
