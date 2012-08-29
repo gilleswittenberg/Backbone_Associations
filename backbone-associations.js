@@ -217,7 +217,7 @@
       var protoProps = {};
       var that;
       var Model, Collection;
-      var model = false;
+      var assocModel = false;
 
       switch (association.type) {
 
@@ -262,47 +262,83 @@
           break;
 
         case 'belongsTo':
-          keyVal = this.get(key);
+          // association attributes must be object to append keys on it
           attributes = !_.isUndefined(attributes) ? attributes : {};
-          if (keyVal) {
-            //++ check if foreignKey is set and different from keyVal
-            attributes[foreignKey] = keyVal;
-          }
-          if (association.collection) {
-            model = association.collection.get(attributes[foreignKey]);
-            if (!model && attributes.cid) {
-              model = association.collection.getByCid(attributes.cid);
-              delete attributes.cid;
-            }
-            if (!model) {
-              //++ validate attributes
-              model = association.collection.create(attributes, {async: false});
-              this.set(key, model.get(foreignKey));
-            }
-          }
+          // get key of model
+          keyVal = this.get(key);
+          // set key if already in association attributes and not on model
           if (attributes.id && keyVal !== attributes.id) {
             this.set(key, attributes.id);
           }
-          //++ validate attributes
-          if (!model) {
-            Model = association.Model ? association.Model : Backbone.Model.extend();
-            model = new Model(attributes);
+          // set key on association attributes
+          if (keyVal) {
+            // check if association foreignKey is already set and different from model key
+            if (attributes[foreignKey] && attributes[foreignKey] !== keyVal) {
+              throw new Error('association foreignKey will be overwritten');
+            }
+            attributes[foreignKey] = keyVal;
           }
-          this[foreignName] = model;
+          // get or create model from collection
+          if (association.collection) {
+            assocModel = association.collection.get(attributes[foreignKey]);
+            if (!assocModel && attributes.cid) {
+              assocModel = association.collection.getByCid(attributes.cid);
+              delete attributes.cid;
+            }
+            if (!assocModel) {
+              //++ validate attributes
+              assocModel = association.collection.create(attributes, {async: false});
+              // attributes won't validate model
+              if (!assocModel) {
+                return false;
+              }
+              // save or fetch association
+              this._syncAssociation(assocModel, key, foreignKey);
+            }
+          } else {
+            //++ validate attributes
+            if (!assocModel) {
+              assocModel = new association.Model(attributes);
+              // attributes won't validate model
+              if (!assocModel) {
+                return false;
+              }
+            }
+          }
+          // set association on model
+          this[foreignName] = assocModel;
+          // save or fetch association
           //++ improve check instead of length check
-          if (!this[foreignName].isNew() && _.keys(attributes).length <= 1) {
-            this[foreignName].fetch();
-            this.set(key, model.get(foreignKey));
-          } else if (this[foreignName].isNew() && !association.collection) {
-            this[foreignName].save(null, null, {async: false});
+          if (!association.collection && _.keys(attributes).length <= 1) {
+            this._syncAssociation(assocModel, key, foreignKey);
           }
-          that = this;
-          this[foreignName].on('change:' + foreignKey, function () { that._setParentIdToModel(association); });
           break;
       }
 
       if (association.type !== 'belongsTo' && association.reverse) {
         this[foreignName][association.name] = this;
+      }
+    },
+
+    _syncAssociation: function (model, key, foreignKey) {
+      var that;
+      if (model.isNew()) {
+        // set (on change) association id to model key
+        that = this;
+        model.save(model.attributes, {
+          success: function (nextModel, resp) {
+            if (!that.isNew()) {
+              that.save(key, nextModel.get[foreignKey]);
+            } else {
+              that.on('change:' + that.idAttribute, function () {
+                that.save(key, model.get[foreignKey]);
+              });
+            }
+          }
+        });
+      } else {
+        model.fetch();
+        this.set(key, model.get(foreignKey));
       }
     },
 
