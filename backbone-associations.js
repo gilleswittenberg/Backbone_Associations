@@ -286,22 +286,31 @@
             // create
             if (!assocModel) {
               //++ validate attributes
-              assocModel = association.collection.create(attributes, {async: false});
+              that = this;
+              assocModel = association.collection.create(attributes, {
+                success: function (model, resp) {
+                  console.log(resp, that, model, foreignKey, model.get(foreignKey), that.idAttribute);
+                  if (!that.isNew()) {
+                    that.save(key, model.get(foreignKey));
+                  } else {
+                    that.on('change:' + that.idAttribute, function () {
+                      console.log('save');
+                      that.save(key, model.get(foreignKey));
+                    });
+                  }
+                }
+              });
               // attributes won't validate model
               if (!assocModel) {
                 return false;
               }
-              // save or fetch association
-              this._syncAssociation(assocModel, key, foreignKey);
             }
           } else {
             //++ validate attributes
+            assocModel = new association.Model(attributes);
+            // attributes won't validate model
             if (!assocModel) {
-              assocModel = new association.Model(attributes);
-              // attributes won't validate model
-              if (!assocModel) {
-                return false;
-              }
+              return false;
             }
           }
           // set key if already in association attributes and not on model
@@ -313,35 +322,29 @@
           // save or fetch association
           //++ improve check instead of length check
           if (!association.collection && _.keys(attributes).length <= 1) {
-            this._syncAssociation(assocModel, key, foreignKey);
+            if (assocModel.isNew()) {
+              // set (on change) association id to model key
+              that = this;
+              assocModel.save(assocModel.attributes, {
+                success: function (model, resp) {
+                  if (!that.isNew()) {
+                    that.save(key, model.get(foreignKey));
+                  } else {
+                    that.on('change:' + that.idAttribute, function () {
+                      that.save(key, model.get(foreignKey));
+                    });
+                  }
+                }
+              });
+            } else {
+              assocModel.fetch();
+            }
           }
           break;
       }
 
       if (association.type !== 'belongsTo' && association.reverse) {
         this[foreignName][association.name] = this;
-      }
-    },
-
-    _syncAssociation: function (model, key, foreignKey) {
-      var that;
-      if (model.isNew()) {
-        // set (on change) association id to model key
-        that = this;
-        model.save(model.attributes, {
-          success: function (nextModel, resp) {
-            if (!that.isNew()) {
-              that.save(key, nextModel.get[foreignKey]);
-            } else {
-              that.on('change:' + that.idAttribute, function () {
-                that.save(key, model.get[foreignKey]);
-              });
-            }
-          }
-        });
-      } else {
-        model.fetch();
-        this.set(key, model.get(foreignKey));
       }
     },
 

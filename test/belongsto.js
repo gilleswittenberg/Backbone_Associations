@@ -384,17 +384,17 @@ $(document).ready(function() {
     server.respondWith(
       "POST",
       /users/,
-      [200, { "Content-Type": "application/json" }, '{"id":1}']
+      [200, { "Content-Type": "application/json" }, '{"id":11}']
     );
     server.respondWith(
       "POST",
       /profiles/,
-      [200, { "Content-Type": "application/json" }, '{"id":3}']
+      [200, { "Content-Type": "application/json" }, '{"id":3,"user_id":null}']
     );
     server.respondWith(
       "PUT",
       /profiles\/3/,
-      [200, { "Content-Type": "application/json" }, '{"user_id":1}']
+      [200, { "Content-Type": "application/json" }, '{"user_id":11}']
     );
 
     var User = Backbone.Model.extend({
@@ -412,7 +412,8 @@ $(document).ready(function() {
     var profiles = new Profiles();
     profiles.create({});
     server.respond();
-    equal(profiles.at(0).get('user_id'), 1);
+    equal(profiles.at(0).get('user_id'), 11);
+    equal(profiles.at(0).User.id, 11);
   });
 
   test("Create from collection with belongsTo from collection", function () {
@@ -425,7 +426,7 @@ $(document).ready(function() {
     server.respondWith(
       "POST",
       /profiles/,
-      [200, { "Content-Type": "application/json" }, '{"id":3}']
+      [200, { "Content-Type": "application/json" }, '{"id":3,"user_id":null}']
     );
     server.respondWith(
       "PUT",
@@ -451,6 +452,7 @@ $(document).ready(function() {
     });
     var profiles = new Profiles();
     profiles.create({});
+    console.log(server);
     server.respond();
     equal(profiles.at(0).get('user_id'), 11);
     equal(profiles.at(0).User.id, 11);
