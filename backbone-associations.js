@@ -149,19 +149,20 @@
       return attributes;
     },
 
-    initializeAssociations: function (associationAttributes) {
+    initializeAssociations: function () {
       var i, l, association, foreignName;
       for (i = 0, l = this.associations.length; i < l; i++) {
         association = this.associations[i];
         foreignName = association.foreignName;
         // abort if init is false and no attributes set
-        if (typeof associationAttributes[foreignName] === 'undefined' && association.init === false) {
+        if (typeof this.associationAttributes[foreignName] === 'undefined' && association.init === false) {
           continue;
         }
         //attributes = typeof associationAttributes[foreignName] !== 'undefined' ? associationAttributes[foreignName] : {};
         //this._initAssociation(association, attributes);
-        this._initAssociation(association, associationAttributes[foreignName]);
+        this._initAssociation(association, this.associationAttributes[foreignName]);
       }
+      this.associationAttributes = null;
     },
 
     changeBelongsTo: function (foreignName, attributes) {
