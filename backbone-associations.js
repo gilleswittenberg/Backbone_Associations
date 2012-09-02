@@ -224,7 +224,6 @@
         case 'hasMany':
           keyVal = this.id;
           this[foreignName] = new association.Collection(attributes);
-          this[foreignName].url = foreignName.toLowerCase();
           this[foreignName].fetch = function fetch(options) {
             options = options ? options : {};
             options.data = options.data ? options.data : {};
@@ -243,22 +242,31 @@
 
         case 'hasOne':
           attributes = !_.isUndefined(attributes) ? attributes : {};
-          if (this.id) {
+          if (!this.isNew()) {
             //++ check if foreignKey is set and different from this.id
             attributes[foreignKey] = this.id;
           }
           this[foreignName] = new association.Model(attributes);
           // fetch data from server when only id (and keyVal) are set
           //++ improve check instead of length check
-          if (attributes[this[foreignName].idAttribute] && _.keys(attributes).length <= 2) {
+          if (!this[foreignName].isNew() && _.keys(attributes).length <= 2) {
             this[foreignName].fetch();
           }
           // save if new and foreignKey is set
-          else if (this[foreignName].isNew() && this[foreignName].get('foreignKey')) {
-            this[foreignName].save();
+          else if (this[foreignName].isNew()) {
+			that = this;
+            this[foreignName].save(this[foreignName].attributes, {
+                success: function (model, resp) {
+                  if (!that.isNew()) {
+                    this.save(foreignKey, that.id);
+                  } else {
+                    that.on('change:' + that.idAttribute, function () {
+                      this[foreignName].save(foreignKey, this.id);
+                    });
+                  }
+				}
+			});
           }
-          // pass on change of id to association model
-          this.on('change:' + key, function () { this._setKeyToModel(association); });
           break;
 
         case 'belongsTo':
@@ -289,12 +297,10 @@
               that = this;
               assocModel = association.collection.create(attributes, {
                 success: function (model, resp) {
-                  console.log(resp, that, model, foreignKey, model.get(foreignKey), that.idAttribute);
                   if (!that.isNew()) {
                     that.save(key, model.get(foreignKey));
                   } else {
                     that.on('change:' + that.idAttribute, function () {
-                      console.log('save');
                       that.save(key, model.get(foreignKey));
                     });
                   }

@@ -1,37 +1,54 @@
 $(document).ready(function() {
 
-  test('Create hasOne association on creation with id', function () {
-    this.stub(jQuery, 'ajax');
-    // constants to test against
-    var id = 6;
-    var foreignName = 'Profile';
-    // tests
+  test("Create hasOne association on creation with id", function () {
+    var server = this.sandbox.useFakeServer();
+    server.respondWith(
+      "POST",
+      /profiles/,
+      [200, { "Content-Type": "application/json" }, '{"id":3}']
+    );
+	var Profile = Backbone.Model.extend({urlRoot: 'profiles'});
     var User = Backbone.Assoc.Model.extend({
       associations: [
-        {foreignName: foreignName, name: 'User', type: 'hasOne', Model: Backbone.Model.extend({urlRoot: '/'})},
+        {name: 'User', foreignName: 'Profile', type: 'hasOne', Model: Profile},
       ],
     });
-    var user = new User({id: id});
-    ok(typeof user[foreignName] !== 'undefined', 'Create Profile at creation');
-    ok(typeof user[foreignName].attributes !== 'undefined', 'Profile is Model');
-    equal(user[foreignName].get('user_id'), id, 'Set parentKey (user_id) on Profile Model');
+    var user = new User({id: 6});
+	server.respond();
+    ok(typeof user.Profile !== 'undefined', "Create Profile at creation");
+    ok(user.Profile instanceof Backbone.Model, "Profile is Model");
+    equal(user.Profile.get('user_id'), 6, "Set parentKey (user_id) on Profile Model");
+    equal(user.Profile.get('id'), 3, "Set id from server");
   });
 
-  test('Create hasOne association on creation for new model with foreignKey', 2, function () {
-    this.stub(jQuery, 'ajax');
-    // constants to test against
-    var id = 6;
-    var foreignName = 'Profile';
-    // tests
+  test("Create hasOne association on creation for new model", 1, function () {
+    var server = this.sandbox.useFakeServer();
+    server.respondWith(
+      "POST",
+      /profiles/,
+      [200, { "Content-Type": "application/json" }, '{"id":6, "user_id": null}']
+    );
+    server.respondWith(
+      "POST",
+      /users/,
+      [200, { "Content-Type": "application/json" }, '{"id":3}']
+    );
+    server.respondWith(
+      "PUT",
+      /profiles/,
+      [200, { "Content-Type": "application/json" }, '{"id":6, "user_id": 3}']
+    );
+	var Profile = Backbone.Model.extend({urlRoot: 'profiles'});
     var User = Backbone.Assoc.Model.extend({
       associations: [
-        {name: 'User', foreignName: foreignName, foreignKey: 'user_id', type: 'hasOne', Model: Backbone.Model.extend({urlRoot: '/'})},
+        {name: 'User', foreignName: 'Profile', foreignKey: 'user_id', type: 'hasOne', Model: Profile},
       ],
+      urlRoot: 'users'
     });
     var user = new User();
-    ok(typeof user[foreignName].get('user_id') === 'undefined', "No parentId set on model when parentId is not defined");
-    user.set(user.idAttribute, id);
-    ok(typeof user[foreignName].get('user_id') !== 'undefined', "ParentId set on model after id is changed");
+    user.save();
+    server.respond();
+    equal(user.Profile.get('user_id'), 3, "ParentId saved to association model");
   });
 
   test('Create hasOne association with specified Model', function () {
@@ -119,13 +136,13 @@ $(document).ready(function() {
   test("Hasone reverse association", function () {
     this.stub(jQuery, 'ajax');
     var Profile = Backbone.Model.extend({
-      urlRoot: 'profile'
+      urlRoot: 'profiles'
     });
     var User = Backbone.Assoc.Model.extend({
       associations: [
         {name: 'User', foreignName: 'Profile', type: 'hasOne', Model: Profile, reverse: true},
       ],
-      urlRoot: 'user'
+      urlRoot: 'users'
     });
     var user = new User({id: 6});
     ok(typeof user.Profile.User !== 'undefined');

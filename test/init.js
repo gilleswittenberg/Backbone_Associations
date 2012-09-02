@@ -22,9 +22,9 @@ $(document).ready(function() {
 
   test('Association set on model instance', 1, function () {
     this.stub(jQuery, 'ajax');
-    var associations = [{name: 'Post', foreignName: 'Comments', type: 'hasMany', Collection: Backbone.Collection.extend()}];
+    var associations = [{name: 'Post', foreignName: 'Comments', type: 'hasMany', Collection: Backbone.Collection.extend({url: '/'})}];
     var Post = Backbone.Assoc.Model.extend({
-      associations: associations
+      associations: associations,
     });
     var post = new Post({id: 6});
     deepEqual(post.associations, associations);

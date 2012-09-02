@@ -452,7 +452,6 @@ $(document).ready(function() {
     });
     var profiles = new Profiles();
     profiles.create({});
-    console.log(server);
     server.respond();
     equal(profiles.at(0).get('user_id'), 11);
     equal(profiles.at(0).User.id, 11);
