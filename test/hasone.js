@@ -211,4 +211,21 @@ $(document).ready(function() {
     var user = new User({id: 3, Profile: {role: 'visitor'}});
     equal(typeof user.Profile, 'undefined');
   });
+
+  test("Call destroy on association model", function () {
+    this.stub(jQuery, 'ajax');
+    var Profile = Backbone.Assoc.Model.extend({
+      urlRoot: 'profiles',
+    });
+    var User = Backbone.Assoc.Model.extend({
+      associations: [
+        {name: 'User', foreignName: 'Profile', type: 'hasOne', Model: Profile},
+      ],
+      urlRoot: 'users',
+    });
+    var user = new User();
+    var spy = this.spy(user.Profile, 'destroy');
+    user.destroy();
+    ok(spy.called);
+  });
 });

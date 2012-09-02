@@ -441,6 +441,31 @@
         case 'belongsTo':
           return this.idAttribute;
       }
+    },
+
+    destroy: function (options) {
+      var i, l, association;
+      for (i = 0, l = this.associations.length; i < l; i++) {
+        association = this.associations[i];
+        if (association.type === 'hasOne') {
+          if (this[association.foreignName]) {
+            this[association.foreignName].destroy(options);
+          }
+        }
+        if (association.type === 'belongsTo') {
+          if (!association.collection && this[association.foreignName]) {
+            this[association.foreignName].destroy(options);
+          }
+        }
+        if (association.type === 'hasMany') {
+          if (this[association.foreignName]) {
+            while (this[association.foreignName].size()) {
+              this[association.foreignName].at(0).destroy(options);
+            }
+          }
+        }
+      }
+      Backbone.Model.prototype.destroy.call(this, options);
     }
   });
 

@@ -492,4 +492,41 @@ $(document).ready(function() {
     var profile = new Profile({id: 3, User: {name: 'BB King'}});
     equal(typeof profile.User, 'undefined');
   });
+
+  test("Call destroy on association model", function () {
+    this.stub(jQuery, 'ajax');
+    var User = Backbone.Model.extend({
+      urlRoot: 'users',
+    });
+    var Profile = Backbone.Assoc.Model.extend({
+      associations: [
+        {name: 'Profile', foreignName: 'User', type: 'belongsTo', Model: User},
+      ],
+      urlRoot: 'profiles',
+    });
+    var profile = new Profile();
+    var spy = this.spy(profile.User, 'destroy');
+    profile.destroy();
+    ok(spy.called);
+  });
+
+  test("Don't call destroy on association model if in collection", function () {
+    this.stub(jQuery, 'ajax');
+    var Users = Backbone.Collection.extend({
+      url: 'users',
+    });
+    var users = new Users();
+    var Profile = Backbone.Assoc.Model.extend({
+      associations: [
+        {name: 'Profile', foreignName: 'User', type: 'belongsTo', collection: users},
+      ],
+      urlRoot: 'profiles',
+    });
+    var profile = new Profile();
+    var spy = this.spy(profile.User, 'destroy');
+    profile.destroy();
+    ok(!spy.called);
+  });
+
+
 });

@@ -178,4 +178,23 @@ $(document).ready(function() {
     ok(spyDestroy.called, "Remove triggered on Comments collection");
     equal(post.Comments.size(), 3, "Comments fetched from server");
   });
+
+  test("Call destroy on all association models", function () {
+    this.stub(jQuery, 'ajax');
+    var Comments = Backbone.Collection.extend({
+      url: 'comments',
+    });
+    var Post = Backbone.Assoc.Model.extend({
+      associations: [
+        {name: 'Post', foreignName: 'Comments', type: 'hasMany', Collection: Comments},
+      ],
+      urlRoot: 'posts',
+    });
+    var post = new Post({id: 1, Comments: [{id: 2}, {id: 3}]});
+    var spy1 = this.spy(post.Comments.at(0), 'destroy');
+    var spy2 = this.spy(post.Comments.at(1), 'destroy');
+    post.destroy();
+    ok(spy1.called);
+    ok(spy2.called);
+  });
 });
