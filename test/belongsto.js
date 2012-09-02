@@ -250,9 +250,9 @@ $(document).ready(function() {
     var profile = new Profile({id: 6, User: {id: 3, name: ''}});
     equal(profile.get('user_id'), 3);
     ok(profile.changeBelongsTo('User', {id: 4, name: 'BB King'}));
+    equal(profile.get('user_id'), 4);
     equal(profile.User.get('name'), 'BB King');
     equal(profile.User.name, 'User');
-    equal(profile.get('user_id'), 4);
   });
 
   test("Change belongsTo with Model", function () {
@@ -457,4 +457,39 @@ $(document).ready(function() {
     equal(profiles.at(0).User.id, 11);
   });
 
+  test("Validate", function () {
+    var User = Backbone.Model.extend({
+      urlRoot: 'users',
+      validate: function () {
+        return 'Error';
+      }
+    });
+    var Profile = Backbone.Assoc.Model.extend({
+      associations: [
+        {name: 'Profile', foreignName: 'User', type: 'belongsTo', Model: User},
+      ],
+      urlRoot: 'profiles'
+    });
+    var profile = new Profile({id: 3, User: {name: 'BB King'}});
+    equal(typeof profile.User, 'undefined');
+  });
+
+  test("Validate from collection", function () {
+    var User = Backbone.Model.extend({
+      urlRoot: 'users',
+      validate: function () {
+        return 'Error';
+      }
+    });
+    var Users = Backbone.Collection.extend({model: User});
+    var users = new Users();
+    var Profile = Backbone.Assoc.Model.extend({
+      associations: [
+        {name: 'Profile', foreignName: 'User', type: 'belongsTo', collection: users},
+      ],
+      urlRoot: 'profiles'
+    });
+    var profile = new Profile({id: 3, User: {name: 'BB King'}});
+    equal(typeof profile.User, 'undefined');
+  });
 });

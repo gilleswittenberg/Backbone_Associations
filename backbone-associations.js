@@ -247,7 +247,11 @@
             //++ check if foreignKey is set and different from this.id
             attributes[foreignKey] = this.id;
           }
-          this[foreignName] = new association.Model(attributes);
+          var assocModel = new association.Model(attributes);
+          if (!assocModel.isValid()) {
+            return false;
+          }
+          this[foreignName] = assocModel;
           // fetch data from server when only id (and keyVal) are set
           //++ improve check instead of length check
           if (!this[foreignName].isNew() && _.keys(attributes).length <= 2) {
@@ -255,18 +259,18 @@
           }
           // save if new and foreignKey is set
           else if (this[foreignName].isNew()) {
-			that = this;
+            that = this;
             this[foreignName].save(this[foreignName].attributes, {
-                success: function (model, resp) {
-                  if (!that.isNew()) {
-                    this.save(foreignKey, that.id);
-                  } else {
-                    that.on('change:' + that.idAttribute, function () {
-                      this[foreignName].save(foreignKey, this.id);
-                    });
-                  }
-				}
-			});
+              success: function (model, resp) {
+                if (!that.isNew()) {
+                  this.save(foreignKey, that.id);
+                } else {
+                  that.on('change:' + that.idAttribute, function () {
+                    this[foreignName].save(foreignKey, this.id);
+                  });
+                }
+              }
+			      });
           }
           break;
 
@@ -316,7 +320,7 @@
             //++ validate attributes
             assocModel = new association.Model(attributes);
             // attributes won't validate model
-            if (!assocModel) {
+            if (!assocModel.isValid()) {
               return false;
             }
           }

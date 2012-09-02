@@ -194,4 +194,21 @@ $(document).ready(function() {
     equal(user['Profile'].get('role'), 'visitor', "role field for profile with id 3 fetched from server");
     ok(typeof user.get('Profile'), 'undefined', "Profile field not set on user");
   });
+
+  test("Validate", function () {
+    var Profile = Backbone.Assoc.Model.extend({
+      urlRoot: 'profiles',
+      validate: function () {
+        return 'Error';
+      }
+    });
+    var User = Backbone.Assoc.Model.extend({
+      associations: [
+        {name: 'User', foreignName: 'Profile', type: 'hasOne', Model: Profile},
+      ],
+      urlRoot: 'users',
+    });
+    var user = new User({id: 3, Profile: {role: 'visitor'}});
+    equal(typeof user.Profile, 'undefined');
+  });
 });
