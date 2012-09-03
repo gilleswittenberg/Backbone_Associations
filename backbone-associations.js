@@ -252,6 +252,9 @@
             return false;
           }
           this[foreignName] = assocModel;
+          if (association.reverse) {
+            this[foreignName][association.name] = this;
+          }
           // fetch data from server when only id (and keyVal) are set
           //++ improve check instead of length check
           if (!this[foreignName].isNew() && _.keys(attributes).length <= 2) {
@@ -354,9 +357,6 @@
           break;
       }
 
-      if (association.type !== 'belongsTo' && association.reverse) {
-        this[foreignName][association.name] = this;
-      }
     },
 
     _setAssociationAttributes: function (association, attributes) {

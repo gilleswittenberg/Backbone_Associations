@@ -188,7 +188,7 @@ $(document).ready(function() {
     var user = new User({id: 6, Profile: {id: 3, role: ''}});
     var spy = this.spy();
     user.Profile.on('change', spy);
-    user.save(null, {error: function () {console.log(arguments);}});
+    user.save(null);
     server.respond();
     ok(spy.called);
     equal(user['Profile'].get('role'), 'visitor', "role field for profile with id 3 fetched from server");
