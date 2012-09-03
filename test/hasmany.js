@@ -43,6 +43,17 @@ $(document).ready(function() {
     equal(post.Comments.size(), 0, "Collection models set from attributes and not fetched from server");
   });
 
+  test("Fetch of association collection to return false when model is new", 1, function () {
+    var Comments = Backbone.Collection.extend({url: 'comments'});
+    var Post = Backbone.Assoc.Model.extend({
+      associations: [
+        {name: 'Post', foreignName: 'Comments', type: 'hasMany', Collection: Comments}
+      ],
+    });
+    var post = new Post();
+    ok(!post.Comments.fetch());
+  });
+
   test("Init", function () {
     var server = this.sandbox.useFakeServer();
     server.respondWith(

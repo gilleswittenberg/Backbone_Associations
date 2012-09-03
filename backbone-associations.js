@@ -84,12 +84,8 @@
         if (type === 'hasOne' && typeof association.Model !== 'function') {
           continue;
         }
-        // check if Model or collection is set for hasOne association
+        // check if Model or collection is set for belongsTo association
         if (type === 'belongsTo' && typeof association.Model !== 'function' && !association.collection) {
-          continue;
-        }
-        // check if foreignKey or name is set for hasMany and hasOne
-        if ((type === 'hasMany' || type === 'hasOne') && !association.name && !association.foreignKey) {
           continue;
         }
         // set attributesName
@@ -101,6 +97,8 @@
           association.collection = association.collection();
         }
         arr.push(association);
+        // initialize toAssociativeJSON
+        //++ could be improved according to speed (don't check / overwrite after first overwrite)
         if (association.includeInJSON) {
           this.toJSON = this.toAssociativeJSON;
         }
@@ -109,11 +107,12 @@
     },
 
     _getAssociation: function (type, name) {
+      var i, l;
       if (!name) {
         name = type;
         type = 'name';
       }
-      for (var i = 0, l = this.associations.length; i < l; i++) {
+      for (i = 0, l = this.associations.length; i < l; i++) {
         if (this.associations[i][type] === name) {
           return this.associations[i];
         }
@@ -158,8 +157,6 @@
         if (typeof this.associationAttributes[foreignName] === 'undefined' && association.init === false) {
           continue;
         }
-        //attributes = typeof associationAttributes[foreignName] !== 'undefined' ? associationAttributes[foreignName] : {};
-        //this._initAssociation(association, attributes);
         this._initAssociation(association, this.associationAttributes[foreignName]);
       }
       this.associationAttributes = null;
@@ -192,8 +189,11 @@
           model = association.collection.create();
         }
       } else {
-        Model = association.Model ? association.Model : Backbone.Model.extend();
-        model = new Model(attributes);
+        if (association.collection) {
+          model = association.collection.create(attributes);
+        } else {
+          model = new association.Model(attributes);
+        }
       }
       foreignKey = this._getForeignKey(association);
       if (this[foreignName]) {
@@ -215,33 +215,35 @@
       var keyVal;
       var key = this._getKey(association);
       var foreignKey = this._getForeignKey(association);
-      var protoProps = {};
-      var that;
+      var that = this;
       var Model, Collection;
       var assocModel = false;
 
       switch (association.type) {
 
         case 'hasMany':
-          keyVal = this.id;
           this[foreignName] = new association.Collection(attributes);
           this[foreignName].fetch = function fetch(options) {
+            // do not fetch when model is new
+            if (that.isNew()) {
+              return false;
+            }
             options = options ? options : {};
             options.data = options.data ? options.data : {};
-            //++ return false if no this.id / keyVal
-            options.data[foreignKey] = keyVal;
+            options.data[foreignKey] = that.id;
             if (association.Collection.prototype.fetch !== Backbone.Collection.prototype.fetch) {
               return association.Collection.prototype.fetch.call(this, options);
             } else {
               return Backbone.Collection.prototype.fetch.call(this, options);
             }
           }
-          if (_.isUndefined(attributes) && keyVal) {
+          if (_.isUndefined(attributes) && !this.isNew()) {
             this[foreignName].fetch();
           }
           break;
 
         case 'hasOne':
+          // association attributes must be object to append keys on it
           attributes = !_.isUndefined(attributes) ? attributes : {};
           if (!this.isNew()) {
             //++ check if foreignKey is set and different from this.id
@@ -255,14 +257,13 @@
           if (association.reverse) {
             this[foreignName][association.name] = this;
           }
-          // fetch data from server when only id (and keyVal) are set
+          // fetch data from server when only id and foreignKey are set in attributes
           //++ improve check instead of length check
           if (!this[foreignName].isNew() && _.keys(attributes).length <= 2) {
             this[foreignName].fetch();
           }
           // save if new and foreignKey is set
           else if (this[foreignName].isNew()) {
-            that = this;
             this[foreignName].save(this[foreignName].attributes, {
               success: function (model, resp) {
                 if (!that.isNew()) {
@@ -301,7 +302,6 @@
             }
             // create
             if (!assocModel) {
-              //++ validate attributes
               that = this;
               assocModel = association.collection.create(attributes, {
                 success: function (model, resp) {
@@ -320,7 +320,6 @@
               }
             }
           } else {
-            //++ validate attributes
             assocModel = new association.Model(attributes);
             // attributes won't validate model
             if (!assocModel.isValid()) {
@@ -338,7 +337,6 @@
           if (!association.collection && _.keys(attributes).length <= 1) {
             if (assocModel.isNew()) {
               // set (on change) association id to model key
-              that = this;
               assocModel.save(assocModel.attributes, {
                 success: function (model, resp) {
                   if (!that.isNew()) {
@@ -356,7 +354,6 @@
           }
           break;
       }
-
     },
 
     _setAssociationAttributes: function (association, attributes) {

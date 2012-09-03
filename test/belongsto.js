@@ -5,7 +5,7 @@ $(document).ready(function() {
     var User = Backbone.Model.extend({urlRoot: 'users'});
     var Post = Backbone.Assoc.Model.extend({
       associations: [
-        {name: 'Post', foreignName: 'User', type: 'belongsTo', Model: User)},
+        {name: 'Post', foreignName: 'User', type: 'belongsTo', Model: User},
       ],
       urlRoot: 'posts'
     });
@@ -67,7 +67,7 @@ $(document).ready(function() {
   test('Create belongsTo association on creation with collection specified as function', function () {
     this.stub(jQuery, 'ajax');
     var User = Backbone.Model.extend();
-    var user = new User({id: 6);
+    var user = new User({id: 6});
     var Users = Backbone.Collection.extend({url: 'users'});
     var users = new Users(user);
     var Post = Backbone.Assoc.Model.extend({
@@ -109,7 +109,7 @@ $(document).ready(function() {
   });
 
   test("Create belongsTo association on creation with empty attributes object", function () {
-    this.stub(jQuery, 'ajax'});
+    this.stub(jQuery, 'ajax');
     var User = Backbone.Model.extend();
     var Users = Backbone.Collection.extend({url: 'users'});
     var users = new Users();
@@ -434,6 +434,7 @@ $(document).ready(function() {
   });
 
   test("Validate from collection", function () {
+    this.stub(jQuery, 'ajax');
     var User = Backbone.Model.extend({
       urlRoot: 'users',
       validate: function () {
@@ -448,7 +449,7 @@ $(document).ready(function() {
       ],
       urlRoot: 'profiles'
     });
-    var profile = new Profile({id: 3, User: {name: 'BB King'}});
+    var profile = new Profile({id: 3, User: {id: 6, name: 'BB King'}});
     equal(typeof profile.User, 'undefined');
   });
 
