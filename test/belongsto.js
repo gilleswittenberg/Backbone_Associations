@@ -2,21 +2,16 @@ $(document).ready(function() {
 
   test("Create belongsTo association on creation with id", function () {
     this.stub(jQuery, 'ajax');
-    // constants to test against
-    var id = 6;
-    var foreignName = 'User';
-    // tests
+    var User = Backbone.Model.extend({urlRoot: 'users'});
     var Post = Backbone.Assoc.Model.extend({
       associations: [
-        {foreignName: foreignName, name: 'Post', type: 'belongsTo', Model: Backbone.Model.extend({urlRoot: 'assoc'})},
+        {name: 'Post', foreignName: 'User', type: 'belongsTo', Model: User)},
       ],
       urlRoot: 'posts'
     });
-    var post = new Post({id: id});
-    ok(typeof post[foreignName] !== 'undefined', 'Create User at creation');
-    ok(typeof post[foreignName].attributes !== 'undefined', 'User is a Model');
-    //post[foreignName].set(post[foreignName].idAttribute, id);
-    //equal(post.get('user_id'), id, 'Set parentKey (user_id) on Profile Model');
+    var post = new Post({id: 6});
+    ok(typeof post.User !== 'undefined', 'Create User at creation');
+    ok(post.User instanceof Backbone.Model, 'User is a Model');
   });
 
   test("Fetch belongsTo association on creation with only id in attributes", function () {
@@ -39,8 +34,8 @@ $(document).ready(function() {
     equal(post.User.get('name'), 'BB King', 'Attributes fetched from server');
   });
 
-  test("Create belongsTo association on creation with parent + id", function () {
-    this.stub(jQuery, 'ajax');
+  test("Create belongsTo association with attributes", function () {
+    var stub = this.stub(jQuery, 'ajax');
     var User = Backbone.Model.extend({url: 'users'});
     var Profile = Backbone.Assoc.Model.extend({
       associations: [
@@ -50,35 +45,19 @@ $(document).ready(function() {
     });
     var profile = new Profile({id: 6, User: {id: 3, name: 'BB King'}});
     equal(profile.User.id, 3);
+    ok(!stub.called);
     equal(profile.get('user_id'), 3);
   });
 
-  test('Create belongsTo association on creation with specified Model', function () {
+  test("Create belongsTo association on creation with specified collection", function () {
     this.stub(jQuery, 'ajax');
-    // constants to test against
-    var id = 6;
-    var foreignName = 'User';
-    var User = Backbone.Model.extend({name: 'UserModel', url: 'users'});
-    // tests
-    var Post = Backbone.Assoc.Model.extend({
-      associations: [
-        {foreignName: foreignName, name: 'Post', type: 'belongsTo', Model: User},
-      ],
-    });
-    var post = new Post({id: id});
-    equal(post[foreignName].name, 'UserModel');
-  });
-
-  test('Create belongsTo association on creation with specified collection', function () {
-    this.stub(jQuery, 'ajax');
-
-    var User = Backbone.Model.extend();
-    var user = new User({id: 6, name: 'userName'});
-    var Users = Backbone.Collection.extend({url: 'users'});
+    var User = Backbone.Model.extend({urlRoot: 'users'});
+    var user = new User({id: 6});
+    var Users = Backbone.Collection.extend({model: User});
     var users = new Users(user);
     var Post = Backbone.Assoc.Model.extend({
       associations: [
-        {foreignName: 'User', name: 'Post', type: 'belongsTo', collection: users},
+        {name: 'Post', foreignName: 'User', type: 'belongsTo', collection: users},
       ],
     });
     var post = new Post({user_id: 6});
@@ -87,14 +66,13 @@ $(document).ready(function() {
 
   test('Create belongsTo association on creation with collection specified as function', function () {
     this.stub(jQuery, 'ajax');
-
     var User = Backbone.Model.extend();
-    var user = new User({id: 6, name: 'userName'});
+    var user = new User({id: 6);
     var Users = Backbone.Collection.extend({url: 'users'});
     var users = new Users(user);
     var Post = Backbone.Assoc.Model.extend({
       associations: [
-        {foreignName: 'User', name: 'Post', type: 'belongsTo', collection: function () { return users; }},
+        {name: 'Post', foreignName: 'User', type: 'belongsTo', collection: function () { return users; }},
       ],
     });
     var post = new Post({user_id: 6});
@@ -102,14 +80,13 @@ $(document).ready(function() {
   });
 
   test("Create belongsTo association on creation with specified but not in collection", function () {
-    this.stub(jQuery, 'ajax', function () {});
-
+    this.stub(jQuery, 'ajax');
     var User = Backbone.Model.extend();
     var Users = Backbone.Collection.extend({url: 'users'});
     var users = new Users();
     var Post = Backbone.Assoc.Model.extend({
       associations: [
-        {foreignName: 'User', name: 'Post', type: 'belongsTo', collection: users}
+        {name: 'Post', foreignName: 'User', type: 'belongsTo', collection: users}
       ],
     });
     var post = new Post({user_id: 6});
@@ -117,8 +94,7 @@ $(document).ready(function() {
   });
 
   test("Create belongsTo association on creation in collection specified by cid", function () {
-    this.stub(jQuery, 'ajax', function () {});
-
+    this.stub(jQuery, 'ajax');
     var User = Backbone.Model.extend();
     var Users = Backbone.Collection.extend({url: 'users'});
     var users = new Users();
@@ -133,14 +109,13 @@ $(document).ready(function() {
   });
 
   test("Create belongsTo association on creation with empty attributes object", function () {
-    this.stub(jQuery, 'ajax', function () {});
-
+    this.stub(jQuery, 'ajax'});
     var User = Backbone.Model.extend();
     var Users = Backbone.Collection.extend({url: 'users'});
     var users = new Users();
     var Post = Backbone.Assoc.Model.extend({
       associations: [
-        {foreignName: 'User', name: 'Post', type: 'belongsTo', collection: users}
+        {name: 'Post', foreignName: 'User', type: 'belongsTo', collection: users}
       ],
     });
     var post = new Post({User: {}});
@@ -150,18 +125,18 @@ $(document).ready(function() {
   test("Init", function () {
     var server = this.sandbox.useFakeServer();
     server.respondWith(
-      "PUT",
-      /post/,
-      [200, { "Content-Type": "application/json" }, '{"id":6, "User":{"id":3}}']
+      'PUT',
+      /posts/,
+      [200, {'Content-Type': 'application/json'}, '{"id":6, "User":{"id":3}}']
     );
     var User = Backbone.Model.extend({
-      urlRoot: 'user'
+      urlRoot: 'users'
     });
     var Post = Backbone.Assoc.Model.extend({
       associations: [
         {name: 'Post', foreignName: 'User', type: 'belongsTo', Model: User, init: false},
       ],
-      urlRoot: 'post'
+      urlRoot: 'posts'
     });
     var post = new Post({id: 6});
     equal(typeof post.User, 'undefined');
@@ -169,22 +144,6 @@ $(document).ready(function() {
     server.respond();
     ok(typeof post.User !== 'undefined');
   });
-
-  /*
-  test("BelongsTo reverse association", function () {
-    var User = Backbone.Model.extend({
-      urlRoot: 'user'
-    });
-    var Post = Backbone.Assoc.Model.extend({
-      associations: [
-        {name: 'Post', foreignName: 'User', type: 'belongsTo', Model: User, reverse: true},
-      ],
-      urlRoot: 'post'
-    });
-    var post = new Post({id: 6});
-    ok(typeof post.User.Post !== 'undefined');
-  });
-  */
 
   test("Include in JSON", function () {
     var User = Backbone.Model.extend();
@@ -194,11 +153,11 @@ $(document).ready(function() {
       ],
     });
     var attributes = {
-      "id": 3,
-      "user_id": 6,
-      "User": {
-         "id": 6,
-         "name": "BB King"
+      id: 3,
+      user_id: 6,
+      User: {
+         id: 6,
+         name: 'BB King'
       }
     };
     var post = new Post(attributes);
@@ -213,26 +172,26 @@ $(document).ready(function() {
   test("Save model when server returns nested data", function () {
     var server = this.sandbox.useFakeServer();
     server.respondWith(
-      "PUT",
-      /profile\/6/,
-      [200, { "Content-Type": "application/json" }, '{"id":6, "User":{"id":3,"name":"BB King"}}']
+      'PUT',
+      /profiles\/6/,
+      [200, {'Content-Type': 'application/json'}, '{"id":6, "User":{"id":3,"name":"BB King"}}']
     );
     var User = Backbone.Model.extend();
     var Profile = Backbone.Assoc.Model.extend({
       associations: [
         {name: 'Profile', foreignName: 'User', type: 'belongsTo', Model: User},
       ],
-      urlRoot: 'profile'
+      urlRoot: 'profiles'
     });
     var profile = new Profile({id: 6, User: {id: 3, name: ''}});
     profile.save();
     server.respond();
-    equal(profile.User.get('name'), 'BB King', "name field for user with id 3 fetched from server");
+    equal(profile.User.get('name'), 'BB King', "Name field for user with id 3 fetched from server");
   });
 
   test("Change belongsTo non-existing", function () {
     var Profile = Backbone.Assoc.Model.extend({
-      urlRoot: 'profile'
+      urlRoot: 'profiles'
     });
     var profile = new Profile({id: 6, User: {id: 3, name: ''}});
     ok(profile.changeBelongsTo('NonExist') === false);
@@ -245,7 +204,7 @@ $(document).ready(function() {
       associations: [
         {name: 'Profile', foreignName: 'User', type: 'belongsTo', Model: User},
       ],
-      urlRoot: 'profile'
+      urlRoot: 'profiles'
     });
     var profile = new Profile({id: 6, User: {id: 3, name: ''}});
     equal(profile.get('user_id'), 3);
@@ -262,7 +221,7 @@ $(document).ready(function() {
       associations: [
         {name: 'Profile', foreignName: 'User', type: 'belongsTo', Model: User},
       ],
-      urlRoot: 'profile'
+      urlRoot: 'profiles'
     });
     var user = new User({id: 4});
     var profile = new Profile({id: 6, User: {id: 3, name: ''}});
@@ -280,7 +239,7 @@ $(document).ready(function() {
       associations: [
         {name: 'Profile', foreignName: 'User', type: 'belongsTo', Model: User, collection: users},
       ],
-      urlRoot: 'profile'
+      urlRoot: 'profiles'
     });
     var profile = new Profile({id: 6, User: {id: 3, name: ''}});
     ok(profile.changeBelongsTo('User', 4));
@@ -382,19 +341,19 @@ $(document).ready(function() {
   test("Create from collection", function () {
     var server = this.sandbox.useFakeServer();
     server.respondWith(
-      "POST",
+      'POST',
       /users/,
-      [200, { "Content-Type": "application/json" }, '{"id":11}']
+      [200, {'Content-Type': 'application/json'}, '{"id":11}']
     );
     server.respondWith(
-      "POST",
+      'POST',
       /profiles/,
-      [200, { "Content-Type": "application/json" }, '{"id":3,"user_id":null}']
+      [200, {'Content-Type': 'application/json'}, '{"id":3,"user_id":null}']
     );
     server.respondWith(
-      "PUT",
+      'PUT',
       /profiles\/3/,
-      [200, { "Content-Type": "application/json" }, '{"user_id":11}']
+      [200, {'Content-Type': 'application/json'}, '{"user_id":11}']
     );
 
     var User = Backbone.Model.extend({
@@ -419,19 +378,19 @@ $(document).ready(function() {
   test("Create from collection with belongsTo from collection", function () {
     var server = this.sandbox.useFakeServer();
     server.respondWith(
-      "POST",
+      'POST',
       /users/,
-      [200, { "Content-Type": "application/json" }, '{"id":11}']
+      [200, {'Content-Type': 'application/json'}, '{"id":11}']
     );
     server.respondWith(
-      "POST",
+      'POST',
       /profiles/,
-      [200, { "Content-Type": "application/json" }, '{"id":3,"user_id":null}']
+      [200, {'Content-Type': 'application/json'}, '{"id":3,"user_id":null}']
     );
     server.respondWith(
-      "PUT",
+      'PUT',
       /profiles\/3/,
-      [200, { "Content-Type": "application/json" }, '{"user_id":11}']
+      [200, {'Content-Type': 'application/json'}, '{"user_id":11}']
     );
 
     var User = Backbone.Model.extend({
@@ -510,7 +469,7 @@ $(document).ready(function() {
     ok(spy.called);
   });
 
-  test("Don't call destroy on association model if in collection", function () {
+  test("Do not call destroy on association model if in collection", function () {
     this.stub(jQuery, 'ajax');
     var Users = Backbone.Collection.extend({
       url: 'users',
@@ -527,6 +486,4 @@ $(document).ready(function() {
     profile.destroy();
     ok(!spy.called);
   });
-
-
 });
