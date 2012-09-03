@@ -1,44 +1,44 @@
 $(document).ready(function() {
 
-  test("Create hasOne association on creation with id", function () {
+  test("Create hasOne association on creation with id", 4, function () {
     var server = this.sandbox.useFakeServer();
     server.respondWith(
-      "POST",
+      'POST',
       /profiles/,
-      [200, { "Content-Type": "application/json" }, '{"id":3}']
+      [200, {'Content-Type': 'application/json'}, '{"id":3}']
     );
-	var Profile = Backbone.Model.extend({urlRoot: 'profiles'});
+    var Profile = Backbone.Model.extend({urlRoot: 'profiles'});
     var User = Backbone.Assoc.Model.extend({
       associations: [
         {name: 'User', foreignName: 'Profile', type: 'hasOne', Model: Profile},
       ],
     });
     var user = new User({id: 6});
-	server.respond();
+    server.respond();
     ok(typeof user.Profile !== 'undefined', "Create Profile at creation");
     ok(user.Profile instanceof Backbone.Model, "Profile is Model");
     equal(user.Profile.get('user_id'), 6, "Set parentKey (user_id) on Profile Model");
     equal(user.Profile.get('id'), 3, "Set id from server");
   });
 
-  test("Create hasOne association on creation for new model", 1, function () {
+  test("Create hasOne association on creation for new model", 3, function () {
     var server = this.sandbox.useFakeServer();
     server.respondWith(
-      "POST",
+      'POST',
       /profiles/,
-      [200, { "Content-Type": "application/json" }, '{"id":6, "user_id": null}']
+      [200, {'Content-Type': 'application/json'}, '{"id":6, "user_id": null}']
     );
     server.respondWith(
-      "POST",
+      'POST',
       /users/,
-      [200, { "Content-Type": "application/json" }, '{"id":3}']
+      [200, {'Content-Type': 'application/json'}, '{"id":3}']
     );
     server.respondWith(
-      "PUT",
+      'PUT',
       /profiles/,
-      [200, { "Content-Type": "application/json" }, '{"id":6, "user_id": 3}']
+      [200, {'Content-Type': 'application/json'}, '{"id":6, "user_id": 3}']
     );
-	var Profile = Backbone.Model.extend({urlRoot: 'profiles'});
+    var Profile = Backbone.Model.extend({urlRoot: 'profiles'});
     var User = Backbone.Assoc.Model.extend({
       associations: [
         {name: 'User', foreignName: 'Profile', foreignKey: 'user_id', type: 'hasOne', Model: Profile},
@@ -48,45 +48,17 @@ $(document).ready(function() {
     var user = new User();
     user.save();
     server.respond();
+    equal(user.get('id'), 3, "Id fetched from server");
+    equal(user.Profile.get('id'), 6, "Id fetched to association model");
     equal(user.Profile.get('user_id'), 3, "ParentId saved to association model");
-  });
-
-  test('Create hasOne association with specified Model', function () {
-    var Profile = Backbone.Model.extend({name: 'ProfileModel', urlRoot: 'profiles'});
-    var server = this.sandbox.useFakeServer();
-    server.respondWith(
-      "POST",
-      /profiles/,
-      [200, { "Content-Type": "application/json" }, '{"id":3}']
-    );
-    server.respondWith(
-      "POST",
-      /users/,
-      [200, { "Content-Type": "application/json" }, '{"id":6}']
-    );
-    // tests
-    var User = Backbone.Assoc.Model.extend({
-      associations: [
-        {name: 'User', foreignName: 'Profile', type: 'hasOne', Model: Profile},
-      ],
-      urlRoot: 'users'
-    });
-    var user = new User();
-    user.save();
-    equal(user.Profile.name, 'ProfileModel', "Model is Profile");
-    equal(typeof user.Profile.get('user_id'), 'undefined', "No parentId set on model when parentId is not defined");
-    server.respond();
-    equal(user.id, 6, "Id set from server response");
-    equal(user.Profile.get('user_id'), 6, "ParentId set on model after id is changed");
-    equal(user.Profile.id, 3, "Profile id is set from server response");
   });
 
   test("Fetch foreign model from attribute id", function () {
     var server = this.sandbox.useFakeServer();
     server.respondWith(
-      "GET",
+      'GET',
       /profile\/3/,
-      [200, { "Content-Type": "application/json" }, '{"id":3,"role":"visitor"}']
+      [200, {'Content-Type': 'application/json'}, '{"id":3,"role":"visitor"}']
     );
     var Profile = Backbone.Model.extend({url: 'profile/3'});
     var User = Backbone.Assoc.Model.extend({
@@ -96,7 +68,7 @@ $(document).ready(function() {
     });
     var user = new User({id: 6, Profile: {id: 3}});
     server.respond();
-    equal(user['Profile'].get('role'), 'visitor', "role field for profile with id 3 fetched from server");
+    equal(user['Profile'].get('role'), 'visitor', "Role field for profile with id 3 fetched from server");
   });
 
   test("Create hasone model with attributes", function () {
@@ -107,24 +79,25 @@ $(document).ready(function() {
       ],
     });
     var user = new User({id: 6, Profile: {id: 3, role: 'visitor'}});
-    equal(user['Profile'].get('role'), 'visitor', "role field for profile with id 3 fetched from server");
+    equal(user.Profile.get('user_id'), 6, "Model key set as foreignKey");
+    equal(user.Profile.get('role'), 'visitor', "role field for profile with id 3 fetched from server");
   });
 
   test("Init", function () {
     var server = this.sandbox.useFakeServer();
     server.respondWith(
-      "PUT",
-      /user/,
-      [200, { "Content-Type": "application/json" }, '{"id":6, "Profile":{"id":3,"role":"visitor"}}']
+      'PUT',
+      /users/,
+      [200, {'Content-Type': 'application/json'}, '{"id":6, "Profile":{"id":3,"role":"visitor"}}']
     );
     var Profile = Backbone.Model.extend({
-      urlRoot: 'profile'
+      urlRoot: 'profiles'
     });
     var User = Backbone.Assoc.Model.extend({
       associations: [
         {name: 'User', foreignName: 'Profile', type: 'hasOne', Model: Profile, init: false},
       ],
-      urlRoot: 'user'
+      urlRoot: 'users'
     });
     var user = new User({id: 6});
     equal(typeof user.Profile, 'undefined');
@@ -145,7 +118,7 @@ $(document).ready(function() {
       urlRoot: 'users'
     });
     var user = new User({id: 6});
-    ok(typeof user.Profile.User !== 'undefined');
+    equal(user, user.Profile.User);
   });
 
   test("Include in JSON", function () {
@@ -156,11 +129,11 @@ $(document).ready(function() {
       ],
     });
     var attributes = {
-      "id": 3,
-      "Profile": {
-         "id": 6,
-         "user_id": 3,
-         "role": "visitor"
+      id: 3,
+      Profile: {
+         id: 6,
+         user_id: 3,
+         role: "visitor"
       }
     };
     var user = new User(attributes);
@@ -174,16 +147,16 @@ $(document).ready(function() {
   test("Save model when server returns nested data", function () {
     var server = this.sandbox.useFakeServer();
     server.respondWith(
-      "PUT",
-      /user\/6/,
-      [200, { "Content-Type": "application/json" }, '{"id":6, "Profile":{"id":3,"role":"visitor"}}']
+      'PUT',
+      /users\/6/,
+      [200, {'Content-Type': 'application/json'}, '{"id":6, "Profile":{"id":3,"role":"visitor"}}']
     );
     var Profile = Backbone.Model.extend({});
     var User = Backbone.Assoc.Model.extend({
       associations: [
         {name: 'User', foreignName: 'Profile', type: 'hasOne', Model: Profile},
       ],
-      urlRoot: 'user'
+      urlRoot: 'users'
     });
     var user = new User({id: 6, Profile: {id: 3, role: ''}});
     var spy = this.spy();
@@ -191,7 +164,7 @@ $(document).ready(function() {
     user.save(null);
     server.respond();
     ok(spy.called);
-    equal(user['Profile'].get('role'), 'visitor', "role field for profile with id 3 fetched from server");
+    equal(user.Profile.get('role'), 'visitor', "Role field for profile with id 3 fetched from server");
     ok(typeof user.get('Profile'), 'undefined', "Profile field not set on user");
   });
 
