@@ -267,7 +267,7 @@
             this[foreignName].save(this[foreignName].attributes, {
               success: function (model, resp) {
                 if (!that.isNew()) {
-                  this.save(foreignKey, that.id);
+                  that.save(foreignKey, that.id);
                 } else {
                   that.on('change:' + that.idAttribute, function () {
                     this[foreignName].save(foreignKey, this.id);
