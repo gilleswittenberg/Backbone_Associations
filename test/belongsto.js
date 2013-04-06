@@ -72,7 +72,7 @@ $(document).ready(function() {
     var users = new Users(user);
     var Post = Backbone.Assoc.Model.extend({
       associations: [
-        {name: 'Post', foreignName: 'User', type: 'belongsTo', collection: function () { return users; }},
+        {name: 'Post', foreignName: 'User', type: 'belongsTo', collection: function () { return users; }, init: false},
       ],
     });
     var post = new Post({user_id: 6});
@@ -94,18 +94,48 @@ $(document).ready(function() {
   });
 
   test("Create belongsTo association on creation in collection specified by cid", function () {
-    this.stub(jQuery, 'ajax');
+    var server = this.sandbox.useFakeServer();
+    server.respondWith(
+      'POST',
+      /posts/,
+      [200, {'Content-Type': 'application/json'}, '{"id":3}']
+    );
+    server.respondWith(
+      'POST',
+      /users/,
+      [200, {'Content-Type': 'application/json'}, '{"id":6}']
+    );
     var User = Backbone.Model.extend();
     var Users = Backbone.Collection.extend({url: 'users'});
     var users = new Users();
     var user = users.create();
     var Post = Backbone.Assoc.Model.extend({
+      urlRoot: 'posts',
       associations: [
         {foreignName: 'User', name: 'Post', type: 'belongsTo', collection: users}
       ],
     });
     var post = new Post({User: {cid: user.cid}});
+    post.save();
     deepEqual(post.User, user, "Newly created user from users collection is set as parent model");
+    server.respond();
+    equal(post.get('user_id'), post.User.id);
+  });
+
+  test("Create belongsTo association on creation not in collection specified by cid", function () {
+    this.stub(jQuery, 'ajax');
+    var User = Backbone.Model.extend();
+    var Users = Backbone.Collection.extend({url: 'users'});
+    var users = new Users();
+    var Post = Backbone.Assoc.Model.extend({
+      urlRoot: 'posts',
+      associations: [
+        {foreignName: 'User', name: 'Post', type: 'belongsTo', collection: users}
+      ],
+    });
+    var post = new Post({User: {cid: 'c123'}});
+    ok(typeof post.User !== 'undefined');
+    equal(users.size(), 1);
   });
 
   test("Create belongsTo association on creation with empty attributes object", function () {
@@ -143,6 +173,20 @@ $(document).ready(function() {
     post.save();
     server.respond();
     ok(typeof post.User !== 'undefined');
+  });
+
+  test("Init key set but falsy", function () {
+    var User = Backbone.Model.extend({
+      urlRoot: 'users'
+    });
+    var Post = Backbone.Assoc.Model.extend({
+      associations: [
+        {name: 'Post', foreignName: 'User', type: 'belongsTo', Model: User, init: false},
+      ],
+      urlRoot: 'posts'
+    });
+    var post = new Post({id: 6, user_id: null});
+    equal(typeof post.User, 'undefined');
   });
 
   test("Include in JSON", function () {
@@ -313,7 +357,7 @@ $(document).ready(function() {
     });
     var profile = new Profile({id: 6, user_id: 3, User: {id: 3, name: ''}});
     ok(profile.changeBelongsTo('User', null));
-    equal(typeof profile.get('user_id'), 'undefined');
+    equal(profile.get('user_id'), null);
     equal(typeof profile.User, 'undefined');
   });
 
@@ -470,6 +514,23 @@ $(document).ready(function() {
     ok(spy.called);
   });
 
+  test("Disable destroying of all association models", function () {
+    this.stub(jQuery, 'ajax');
+    var User = Backbone.Model.extend({
+      urlRoot: 'users',
+    });
+    var Profile = Backbone.Assoc.Model.extend({
+      associations: [
+        {name: 'Profile', foreignName: 'User', type: 'belongsTo', Model: User, destroy: false},
+      ],
+      urlRoot: 'profiles',
+    });
+    var profile = new Profile();
+    var spy = this.spy(profile.User, 'destroy');
+    profile.destroy();
+    ok(!spy.called);
+  });
+
   test("Do not call destroy on association model if in collection", function () {
     this.stub(jQuery, 'ajax');
     var Users = Backbone.Collection.extend({
@@ -486,5 +547,20 @@ $(document).ready(function() {
     var spy = this.spy(profile.User, 'destroy');
     profile.destroy();
     ok(!spy.called);
+  });
+
+  test("Key on associations", function () {
+    this.stub(jQuery, 'ajax');
+    var User = Backbone.Model.extend({urlRoot: 'users'});
+    var user = new User({id: 6});
+    var Users = Backbone.Collection.extend({model: User});
+    var users = new Users(user);
+    var Post = Backbone.Assoc.Model.extend({
+      associations: [
+        {name: 'Post', foreignName: 'User', key: 'user_key_id', type: 'belongsTo', collection: users},
+      ],
+    });
+    var post = new Post({user_key_id: 6});
+    deepEqual(post.User, user, "user from users collection is set as parent model" );
   });
 });

@@ -201,4 +201,21 @@ $(document).ready(function() {
     user.destroy();
     ok(spy.called);
   });
+
+  test("Disable destroying of all association models", function () {
+    this.stub(jQuery, 'ajax');
+    var Profile = Backbone.Assoc.Model.extend({
+      urlRoot: 'profiles',
+    });
+    var User = Backbone.Assoc.Model.extend({
+      associations: [
+        {name: 'User', foreignName: 'Profile', type: 'hasOne', Model: Profile, destroy: false},
+      ],
+      urlRoot: 'users',
+    });
+    var user = new User();
+    var spy = this.spy(user.Profile, 'destroy');
+    user.destroy();
+    ok(!spy.called);
+  });
 });

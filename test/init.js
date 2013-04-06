@@ -27,7 +27,7 @@ $(document).ready(function() {
       associations: associations,
     });
     var post = new Post({id: 6});
-    deepEqual(post.associations, associations);
+    equal(post.associations.length, associations.length);
   });
 
   test("Associations checked and removed", function () {

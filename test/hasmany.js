@@ -32,6 +32,20 @@ $(document).ready(function() {
     equal(post.Comments.size(), 2, "Collection models set from attributes");
   });
 
+  test("Create hasMany association on creation within collection", 1, function () {
+    this.stub(jQuery, 'ajax');
+    var Comments = Backbone.Collection.extend({url: 'comments'});
+    var Post = Backbone.Assoc.Model.extend({
+      associations: [
+        {name: 'Post', foreignName: 'Comments', type: 'hasMany', Collection: Comments}
+      ],
+    });
+    var Posts = Backbone.Collection.extend({url: 'posts', model: Post});
+	var posts = new Posts();
+	posts.create({id: 6, Comments: [{id: 1}, {id:2}]});
+    equal(posts.at(0).Comments.size(), 2, "Collection models set from attributes");
+  });
+
   test("Create hasMany association on creation with empty array as attributes", 1, function () {
     var Comments = Backbone.Collection.extend({url: 'comments'});
     var Post = Backbone.Assoc.Model.extend({
@@ -167,5 +181,24 @@ $(document).ready(function() {
     post.destroy();
     ok(spy1.called);
     ok(spy2.called);
+  });
+
+  test("Disable destroying of all association models", function () {
+    this.stub(jQuery, 'ajax');
+    var Comments = Backbone.Collection.extend({
+      url: 'comments',
+    });
+    var Post = Backbone.Assoc.Model.extend({
+      associations: [
+        {name: 'Post', foreignName: 'Comments', type: 'hasMany', Collection: Comments, destroy: false},
+      ],
+      urlRoot: 'posts',
+    });
+    var post = new Post({id: 1, Comments: [{id: 2}, {id: 3}]});
+    var spy1 = this.spy(post.Comments.at(0), 'destroy');
+    var spy2 = this.spy(post.Comments.at(1), 'destroy');
+    post.destroy();
+    ok(!spy1.called);
+    ok(!spy2.called);
   });
 });
