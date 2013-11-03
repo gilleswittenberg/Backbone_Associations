@@ -1,0 +1,23 @@
+{
+  "name": "Backbone_Associations",
+  "main": "backbone-associations.js",
+  "version": "1.1",
+  "homepage": "https://github.com/gilleswittenberg/Backbone_Associations",
+  "authors": [
+    "Gilles Wittenberg <bower@gilleswittenberg.com>"
+  ],
+  "description": "BackboneJS extension that adds hasMany, hasOne, belongsTo associations to Backbone Models",
+  "keywords": [
+    "Backbone",
+    "associations",
+    "hasmany",
+    "hasone",
+    "belongsto"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "backbone": "~1.1",
+    "sinon-qunit": "*",
+    "sinon": "http://sinonjs.org/releases/sinon-1.7.3.js"
+  }
+}
