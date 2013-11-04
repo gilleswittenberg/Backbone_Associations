@@ -1,4 +1,5 @@
 (function () {
+  "use strict";
 
   Backbone.Assoc = {};
 
@@ -131,7 +132,7 @@
     },
 
     parseAssociations: function (attributes) {
-      var i, l, association, foreignName;
+      var i, l, association, foreignName, attributeName;
       for (i = 0, l = this.associations.length; i < l; i++) {
         association = this.associations[i];
         foreignName = association.foreignName;
